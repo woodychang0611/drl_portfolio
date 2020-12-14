@@ -15,6 +15,8 @@ def plot_drawdown(x: pd.core.series.Series):
     return _drawdown(x,True)
 
 def _drawdown(x: pd.core.series.Series,display):
+    if (not isinstance(x,(pd.core.series.Series))):
+        raise TypeError(f'type {type(x)} not supported')
     e = (np.maximum.accumulate(x) - x).idxmax() # end of the period
     if (isinstance(e,float) and math.isnan(e)):
         e = x.index[0]
