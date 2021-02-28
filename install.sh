@@ -1,4 +1,5 @@
 apt-get update 
+apt-get remove tensorflow
 apt-get install libopenmpi-dev
 rm -rf /workspace/spinningup
 cd /workspace
