@@ -41,7 +41,7 @@ class MyGymEnv(gym.Env):
             reward=100
         else:
             done =False
-            reward=old_dist-dist
+            reward=old_dist-dist-0.2
         return self.state, reward, done, {}
 
     def render(self):
