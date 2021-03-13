@@ -9,6 +9,7 @@ from rlkit.torch.sac.sac import SACTrainer
 from rlkit.torch.networks import ConcatMlp
 from rlkit.torch.torch_rl_algorithm import TorchBatchRLAlgorithm
 from continuous_mountain_car_10_11 import Continuous_MountainCarEnv
+from datetime import datetime
 
 def experiment(variant):
     #expl_env = NormalizedBoxEnv(gym.make('MountainCarContinuous-v0'))
@@ -80,9 +81,6 @@ def experiment(variant):
     algorithm.to(ptu.device)
     algorithm.train()
 
-
-
-
 if __name__ == "__main__":
     # noinspection PyTypeChecker
     variant = dict(
@@ -109,6 +107,8 @@ if __name__ == "__main__":
             use_automatic_entropy_tuning=True,
         ),
     )
-    setup_logger('name-of-experiment', variant=variant,log_dir="./rlkit_out/")
+
+    timestamp =datetime.now().strftime("%Y%m%d_%H%M%S")
+    setup_logger('name-of-experiment', variant=variant,log_dir=f"./rlkit_out_{timestamp}/")
     #ptu.set_gpu_mode(True)  # optionally set the GPU (default=False)
     experiment(variant)
