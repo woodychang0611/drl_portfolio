@@ -3,7 +3,7 @@ import numpy as np
 import os
 import itertools
 from common.finance_utility import finance_utility
-from common.common_utility import timestamp, find_dict_max
+from common.common_utility import timestamp
 import math
 current_folder = os.path.dirname(__file__)
 
@@ -20,7 +20,6 @@ investments_returns = pd.read_csv(investments_returns_csv, parse_dates=[
     'Date'], index_col=['Date'])
 investments_returns = investments_returns.sort_index()
 investments_prices = pd.DataFrame(index=investments_returns.index)
-investments_returns_ma = pd.DataFrame(index=investments_returns.index)
 investments_summary = pd.read_csv(investments_summary, index_col=0)
 investment_names = investments_returns.columns[:]
 
@@ -28,17 +27,16 @@ investment_names = investments_returns.columns[:]
 def average_return(s):
     return math.pow(np.prod(s+1), 1.0/len(s))-1
 
-
 for name in investment_names:
     investments_prices[name] = finance_utility.prices_from_returns(
         1, investments_returns[name])
-    investments_returns_ma[name] = investments_returns[name].rolling(
-        60).apply(func=average_return, raw=False)
 
+def get_aum(s):
+    return investments_summary['AUM'][s]
 
-corr_df = investments_returns_ma.corr()
+corr_df = investments_returns.corr()
 corr_df.to_csv(os.path.join(output_folder, 'corr.csv'))
-
+corr_df=corr_df.applymap(lambda s:s if (s != 1) else np.nan)
 
 investments_summary['mdd'] = pd.Series(dtype='float64')
 investments_summary['std'] = pd.Series(dtype='float64')
@@ -63,15 +61,11 @@ selected_investment = set(investment_names)
 
 
 while len(selected_investment) > 30:
-    max_corr = {}
-    def convert_one_to_nan(s): return s if (s != 1) else np.nan
-    for investment in selected_investment:
-        max_corr[investment] = np.nanmax(
-            corr_df[investment].map(convert_one_to_nan))
-
     # Keep the one with highest AUM (Asset Under Management)
-    s = investments_summary['AUM']
-    def compare_func(k): return ((max_corr[k], s[k]))
+
+    #compare highist
+    def compare_func(k): 
+        return ((corr_df[k].max(), get_aum(k)))
     drop_name = sorted(selected_investment, key=compare_func)[-2]
     keep_name = sorted(selected_investment, key=compare_func)[-1]
     print(
