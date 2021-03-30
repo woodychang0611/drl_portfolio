@@ -34,9 +34,12 @@ for name in investment_names:
 def get_aum(s):
     return investments_summary['AUM'][s]
 
-corr_df = investments_returns.corr()
-corr_df.to_csv(os.path.join(output_folder, 'corr.csv'))
-corr_df=corr_df.applymap(lambda s:s if (s != 1) else np.nan)
+cov_df = investments_returns.cov()
+cov_df.to_csv(os.path.join(output_folder, 'cov.csv'))
+
+for name in cov_df.columns:
+    cov_df[name][name]=np.nan
+cov_df=cov_df.applymap(lambda s:s if (s != 1) else np.nan)
 
 investments_summary['mdd'] = pd.Series(dtype='float64')
 investments_summary['std'] = pd.Series(dtype='float64')
@@ -65,16 +68,16 @@ while len(selected_investment) > 30:
 
     #compare highist
     def compare_func(k): 
-        return ((corr_df[k].max(), get_aum(k)))
+        return ((cov_df[k].max(), get_aum(k)))
     drop_name = sorted(selected_investment, key=compare_func)[-2]
     keep_name = sorted(selected_investment, key=compare_func)[-1]
     print(
         f'drop {drop_name} {compare_func(drop_name)}, keep {keep_name} {compare_func(keep_name)}')
-    corr_df = corr_df.drop(drop_name, axis=0)
-    corr_df = corr_df.drop(drop_name, axis=1)
+    cov_df = cov_df.drop(drop_name, axis=0)
+    cov_df = cov_df.drop(drop_name, axis=1)
     selected_investment.remove(drop_name)
 
 print(f'selected_investment:{selected_investment}')
-print(len(corr_df.columns))
-corr_df = investments_summary.join(corr_df, how='right')
-corr_df.to_csv(os.path.join(output_folder, 'selected_corr.csv'))
+print(len(cov_df.columns))
+cov_df = investments_summary.join(cov_df, how='right')
+cov_df.to_csv(os.path.join(output_folder, 'selected_cov.csv'))
