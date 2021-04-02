@@ -1,4 +1,5 @@
 import gym
+import os
 import rlkit.torch.pytorch_util as ptu
 from rlkit.data_management.env_replay_buffer import EnvReplayBuffer
 from rlkit.envs.wrappers import NormalizedBoxEnv
@@ -10,6 +11,9 @@ from rlkit.torch.networks import ConcatMlp
 from rlkit.torch.torch_rl_algorithm import TorchBatchRLAlgorithm
 from continuous_mountain_car_10_11 import Continuous_MountainCarEnv
 from datetime import datetime
+import pandas as pd
+import numpy as np
+
 
 def experiment(variant):
     #expl_env = NormalizedBoxEnv(gym.make('MountainCarContinuous-v0'))
@@ -20,7 +24,7 @@ def experiment(variant):
 
     obs_dim = expl_env.observation_space.low.size
     action_dim = eval_env.action_space.low.size
-
+    post_epoch_funcs =[]
     M = variant['layer_size']
     qf1 = ConcatMlp(
         input_size=obs_dim + action_dim,
@@ -60,7 +64,7 @@ def experiment(variant):
         variant['replay_buffer_size'],
         expl_env,
     )
-    trainer = SACTrainer(
+    sac_trainer = SACTrainer(
         env=eval_env,
         policy=policy,
         qf1=qf1,
@@ -69,8 +73,9 @@ def experiment(variant):
         target_qf2=target_qf2,
         **variant['trainer_kwargs']
     )
+
     algorithm = TorchBatchRLAlgorithm(
-        trainer=trainer,
+        trainer=sac_trainer,
         exploration_env=expl_env,
         evaluation_env=eval_env,
         exploration_data_collector=expl_path_collector,
@@ -78,20 +83,56 @@ def experiment(variant):
         replay_buffer=replay_buffer,
         **variant['algorithm_kwargs']
     )
+    columns =['Epoch','mean','std']
+    result_df = pd.DataFrame(columns =columns)
+    result_csv = os.path.join(variant['log_dir'],'result.csv')
+    def post_epoch_func(self, epoch):
+        print(f'-------------post_epoch_func start-------------')
+        print(result_csv)
+        nonlocal result_df
+        eval_count = 100
+        policy = self.trainer.networks[0]
+        env = NormalizedBoxEnv(gym.make('MyGymEnv-v0'))
+
+        steps_counts=[]
+        for _ in range(eval_count):
+            done = False
+            state = env.reset()
+            steps=0
+            while not done:
+                steps+=1
+                actions = policy.get_actions(state)
+                state, reward, done, _ = env.step(actions)
+            steps_counts.append(steps)
+            df_new = pd.DataFrame ([[epoch,np.mean(steps_counts),np.std(steps_counts)]],
+                                    columns =columns)
+        
+        result_df = pd.concat([result_df,df_new])
+        result_df.set_index('Epoch')
+        print(result_df)
+        result_df.to_csv(result_csv)
+        print(f'-------------post_epoch_func done-------------')        
+
+    algorithm.post_epoch_funcs=[post_epoch_func,]
     algorithm.to(ptu.device)
     algorithm.train()
 
 if __name__ == "__main__":
     # noinspection PyTypeChecker
+
+
+    timestamp =datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_dir = f"./rlkit_out_{timestamp}/"
     variant = dict(
         algorithm="SAC",
         version="normal",
+        log_dir=log_dir,
         layer_size=256,
         replay_buffer_size=int(1E6),
         algorithm_kwargs=dict(
             num_epochs=1500,
             num_eval_steps_per_epoch=5000,
-            num_trains_per_train_loop=1000,
+            num_trains_per_train_loop=100, #1000,
             num_expl_steps_per_train_loop=1000,
             min_num_steps_before_training=1000,
             max_path_length=1000,
@@ -108,7 +149,7 @@ if __name__ == "__main__":
         ),
     )
 
-    timestamp =datetime.now().strftime("%Y%m%d_%H%M%S")
-    setup_logger('name-of-experiment', variant=variant,log_dir=f"./rlkit_out_{timestamp}/")
-    #ptu.set_gpu_mode(True)  # optionally set the GPU (default=False)
+
+    setup_logger('name-of-experiment', variant=variant,snapshot_mode='gap_and_last',log_dir=log_dir)
+    ptu.set_gpu_mode(True)  # optionally set the GPU (default=False)
     experiment(variant)

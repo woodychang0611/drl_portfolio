@@ -2,15 +2,15 @@ import numpy as np
 from math import dist
 from my_gym_env import MyGymEnv
 from random import uniform
-print(uniform(-10,10))
+import pandas as pd
 
-env = MyGymEnv()
-env.render()
-for i in range(0,10):
-    action = np.array([1,1])
-    s,r,d,_ = env.step(action)
-    print(d)
-    env.render()
+def test():
+    n1 = 1
+    def test2():
+        nonlocal  n1
+        print(n1)
+        n1 = 123
+    test2()
+    print(n1)
 
-
-
+test()

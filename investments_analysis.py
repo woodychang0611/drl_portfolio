@@ -63,7 +63,7 @@ for name in investment_names:
 selected_investment = set(investment_names)
 
 
-while len(selected_investment) > 30:
+while len(selected_investment) > 10:
     # Keep the one with highest AUM (Asset Under Management)
 
     #compare highist
