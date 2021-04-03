@@ -1,3 +1,6 @@
+import sys
+sys.path.append(".")
+sys.path.append("..") 
 import gym
 import os
 import rlkit.torch.pytorch_util as ptu
@@ -13,7 +16,6 @@ from continuous_mountain_car_10_11 import Continuous_MountainCarEnv
 from datetime import datetime
 import pandas as pd
 import numpy as np
-
 
 def get_sac_model(env, hidden_sizes=[256, 256]):
     obs_dim = env.observation_space.low.size
@@ -63,7 +65,7 @@ def get_sac_model(env, hidden_sizes=[256, 256]):
 
 
 def get_env():
-    return NormalizedBoxEnv(gym.make('MyGymEnv-v0'))
+    return NormalizedBoxEnv(gym.make('TestGymEnv-v0'))
 
 
 def my_eval_policy(env, algorithm, epoch, eval_result, output_csv):
@@ -88,12 +90,8 @@ def my_eval_policy(env, algorithm, epoch, eval_result, output_csv):
     eval_result.to_csv(output_csv)
     return eval_result
 
-
 def experiment(variant):
-    #expl_env = NormalizedBoxEnv(gym.make('MountainCarContinuous-v0'))
-    #eval_env = NormalizedBoxEnv(gym.make('MountainCarContinuous-v0'))
-    gym.envs.register(
-        id='MyGymEnv-v0', entry_point='my_gym_env:MyGymEnv', max_episode_steps=1000)
+
     expl_env = get_env()
     eval_env = get_env()
 
@@ -146,7 +144,8 @@ def experiment(variant):
 
 if __name__ == "__main__":
     # noinspection PyTypeChecker
-
+    gym.envs.register(
+        id='TestGymEnv-v0', entry_point='common.test_gym_env:TestGymEnv', max_episode_steps=1000)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     log_dir = f"./rlkit_out_{timestamp}/"
     variant = dict(
@@ -156,7 +155,7 @@ if __name__ == "__main__":
         layer_size=256,
         replay_buffer_size=int(1E6),
         algorithm_kwargs=dict(
-            num_epochs=1500,
+            num_epochs=2500,
             num_eval_steps_per_epoch=5000,
             num_trains_per_train_loop=100,  # 1000,
             num_expl_steps_per_train_loop=1000,

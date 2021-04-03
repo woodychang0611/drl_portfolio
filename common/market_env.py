@@ -7,10 +7,14 @@ import gym
 from gym import spaces
 from gym.utils import seeding
 from random import uniform
+from pandas import DataFrame
 
-class MyGymEnv(gym.Env):
-    def __init__(self):
-        print("MyGymEnv")
+class MarketEnv(gym.Env):
+    def __init__(self,investments_returns :DataFrame,features :DataFrame):
+        print(f"Market Env {investments_returns} {features}")
+
+
+
         self.max_step_distance = 1
         self.goal_distance=0.1
         self.total_distance = 10
