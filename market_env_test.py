@@ -3,15 +3,19 @@ from rlkit.envs.wrappers import NormalizedBoxEnv
 import pandas as pd
 from pandas import Timestamp
 import os
+import common
 gym.envs.register(
     id='MarketEnv-v0', entry_point='common.market_env:MarketEnv', max_episode_steps=1000)
 
 
-
-NormalizedBoxEnv(gym.make('MarketEnv-v0',investments_returns=1,features=2))
 current_folder = os.path.dirname(__file__)
-f = os.path.join(current_folder,'./data/selected_investments.csv')
-df = pd.read_csv(f, parse_dates=[
-    'Date'], index_col=['Date'])
-t = Timestamp('2016-03-03 00:00:00')
-print(df[df.index > t])
+inv_csv_train = os.path.join(current_folder, './data/investments_train.csv')
+inv_csv_val = os.path.join(current_folder, './data/investments_validation.csv')
+features_csv = os.path.join(current_folder, './data/features.csv')
+df_inv_train = pd.read_csv(inv_csv_train, parse_dates=[
+                           'Date'], index_col=['Date'])
+df_inv_train = df_inv_train.sort_index(ascending=True)
+df_inv_val = pd.read_csv(inv_csv_val, parse_dates=['Date'], index_col=['Date'])
+df_feature = pd.read_csv(features_csv, parse_dates=['Date'], index_col=['Date'])
+
+NormalizedBoxEnv(gym.make('MarketEnv-v0', investments=df_inv_train, features=df_feature, trade_freq='months', show_info=True))

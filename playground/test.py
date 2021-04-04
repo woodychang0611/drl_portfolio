@@ -1,16 +1,16 @@
+import os
+import sys
+current_folder = os.path.dirname(__file__)
+sys.path.append(os.path.join('current_folder','./..'))
+
+import common 
+
 import numpy as np
 import pandas as pd
 from itertools import combinations
+from pandas import Timestamp
+t = Timestamp('2020-01-31')
 
-# List of Tuples
-matrix = [(22, 16, 23),
-          (33, np.NaN, 11),
-          (44, 34, 11),
-          (55, 35, np.NaN),
-          (66, 36, 13)
-          ]
-# Create a DataFrame object
-dfObj = pd.DataFrame(matrix, index=list('abcde'), columns=list('xyz'))
-
-all_combination = combinations(list('abcde'),2)
-print(list(all_combination))
+print (t)
+t = common.offset_date(t,2,'weeks')
+print(t)
