@@ -11,11 +11,12 @@ from pandas import DataFrame
 
 
 class MarketEnv(gym.Env):
-    def __init__(self, investments: DataFrame, features: DataFrame, show_info=False, trade_freq='days'):
+
+    def load_data(self, investments: DataFrame, features: DataFrame, show_info, trade_freq):
         sample_rules = {
             'days': 'D',
-            'weeks': 'W',
-            'months': 'M'
+                    'weeks': 'W',
+                    'months': 'M'
         }
 
         if(trade_freq not in sample_rules.keys()):
@@ -44,21 +45,27 @@ class MarketEnv(gym.Env):
             sd = investments.index[0]
             ed = investments.index[-1]
             print(f'Trading Frequency: {trade_freq}')
-            print(f'{len(investments.columns)} investments loaded')
-            print(f'{len(features.columns)} features loaded')
+            print(f'{len(self.investments.columns)} investments loaded')
+            print(f'{len(self.features.columns)} features loaded')
             print(f'Starts from {sd} to {ed}')
 
-        self.max_step_distance = 1
-        self.goal_distance = 0.1
-        self.total_distance = 10
-        self.min_action = np.array([-self.max_step_distance, -self.max_step_distance])
-        self.max_action = np.array([self.max_step_distance, self.max_step_distance])
-        self.low_state = np.array([-self.total_distance, -self.total_distance])
-        self.high_state = np.array([self.total_distance, self.total_distance])
-        self.action_space = spaces.Box(low=self.min_action, high=self.max_action,
-                                       dtype=np.float32)
-        self.observation_space = spaces.Box(low=self.low_state, high=self.high_state,
-                                            dtype=np.float32)
+    def init_action_space(self):
+        action_space_size = len(self.investments.columns)
+        self.min_action = np.zeros(action_space_size)
+        self.max_action = np.ones(action_space_size)
+        self.action_space = spaces.Box(low=self.min_action, high=self.max_action, dtype=np.float32)
+
+    def init_observation_space(self):
+        observation_space_size = len(self.investments.columns) + len(self.features.columns)
+        self.low_state = np.full(observation_space_size, -1)
+        self.high_state = np.ones(observation_space_size)
+        self.observation_space = spaces.Box(low=self.low_state, high=self.high_state, dtype=np.float32)
+
+    def __init__(self, investments: DataFrame, features: DataFrame, show_info=False, trade_freq='days',
+                 fix_start_time=False, min_trade_pecentage=0.1):
+        self.load_data(investments=investments, features=features, show_info=show_info, trade_freq=trade_freq)
+        self.init_action_space()
+        self.init_observation_space()
         self.seed()
         self.reset()
 
@@ -67,25 +74,12 @@ class MarketEnv(gym.Env):
         return [seed]
 
     def step(self, action):
-        reward = action
-        old_dist = np.linalg.norm(self.state)
-        self.state += action
-        dist = np.linalg.norm(self.state)
-        if (np.greater(abs(self.state), self.total_distance).any()):
-            done = True
-            reward = -100
-        elif (dist <= self.goal_distance):
-            done = True
-            reward = 100
-        else:
-            done = False
-            reward = old_dist-dist-0.2
-        return self.state, reward, done, {}
+        state, reward, done = 1, 1, 1, 1
+        return state, reward, done, {}
 
     def render(self):
-        print(f'state is {self.state}')
+        pass
 
     def reset(self):
-        self.state = np.array([uniform(-self.total_distance, self.total_distance),
-                               uniform(-self.total_distance, self.total_distance)])
-        return np.array(self.state)
+        state = 1
+        return state

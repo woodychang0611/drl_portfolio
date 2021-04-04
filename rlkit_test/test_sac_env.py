@@ -1,25 +1,21 @@
 import os
 import sys
 current_folder = os.path.dirname(__file__)
-sys.path.append(os.path.join('current_folder','./..'))
-
-from common.trainer import get_sac_model
-
-import gym
-import os
-import rlkit.torch.pytorch_util as ptu
-from rlkit.data_management.env_replay_buffer import EnvReplayBuffer
-from rlkit.envs.wrappers import NormalizedBoxEnv
-from rlkit.launchers.launcher_util import setup_logger
-from rlkit.samplers.data_collector import MdpPathCollector
-from rlkit.torch.sac.policies import TanhGaussianPolicy, MakeDeterministic
-from rlkit.torch.sac.sac import SACTrainer
-from rlkit.torch.networks import ConcatMlp
-from rlkit.torch.torch_rl_algorithm import TorchBatchRLAlgorithm
-from datetime import datetime
-import pandas as pd
+sys.path.append(os.path.join('current_folder', './..'))
 import numpy as np
-
+import pandas as pd
+from datetime import datetime
+from rlkit.torch.torch_rl_algorithm import TorchBatchRLAlgorithm
+from rlkit.torch.networks import ConcatMlp
+from rlkit.torch.sac.sac import SACTrainer
+from rlkit.torch.sac.policies import TanhGaussianPolicy, MakeDeterministic
+from rlkit.samplers.data_collector import MdpPathCollector
+from rlkit.launchers.launcher_util import setup_logger
+from rlkit.envs.wrappers import NormalizedBoxEnv
+from rlkit.data_management.env_replay_buffer import EnvReplayBuffer
+import rlkit.torch.pytorch_util as ptu
+import gym
+from common.trainer import get_sac_model
 
 
 def get_env():
@@ -47,6 +43,7 @@ def my_eval_policy(env, algorithm, epoch, eval_result, output_csv):
     print(eval_result)
     eval_result.to_csv(output_csv)
     return eval_result
+
 
 def experiment(variant):
 
@@ -90,9 +87,7 @@ def experiment(variant):
         nonlocal eval_result
         nonlocal policy
         print(f'-------------post_epoch_func start-------------')
-        eval_result = my_eval_policy(
-            env=get_env(), algorithm=self, epoch=epoch, eval_result=eval_result, output_csv=eval_output_csv,
-        )
+        eval_result = my_eval_policy(env=get_env(), algorithm=self, epoch=epoch, eval_result=eval_result, output_csv=eval_output_csv,)
         print(f'-------------post_epoch_func done-------------')
 
     algorithm.post_epoch_funcs = [post_epoch_func, ]

@@ -4,18 +4,15 @@ import pandas as pd
 from pandas import Timestamp
 import os
 import common
-gym.envs.register(
-    id='MarketEnv-v0', entry_point='common.market_env:MarketEnv', max_episode_steps=1000)
+gym.envs.register(id='MarketEnv-v0', entry_point='common.market_env:MarketEnv', max_episode_steps=1000)
 
 
 current_folder = os.path.dirname(__file__)
 inv_csv_train = os.path.join(current_folder, './data/investments_train.csv')
 inv_csv_val = os.path.join(current_folder, './data/investments_validation.csv')
 features_csv = os.path.join(current_folder, './data/features.csv')
-df_inv_train = pd.read_csv(inv_csv_train, parse_dates=[
-                           'Date'], index_col=['Date'])
-df_inv_train = df_inv_train.sort_index(ascending=True)
+df_inv_train = pd.read_csv(inv_csv_train, parse_dates=['Date'], index_col=['Date'])
 df_inv_val = pd.read_csv(inv_csv_val, parse_dates=['Date'], index_col=['Date'])
 df_feature = pd.read_csv(features_csv, parse_dates=['Date'], index_col=['Date'])
 
-NormalizedBoxEnv(gym.make('MarketEnv-v0', investments=df_inv_train, features=df_feature, trade_freq='months', show_info=True))
+NormalizedBoxEnv(gym.make('MarketEnv-v0', investments=df_inv_train, features=df_feature, trade_freq='weeks', show_info=True))
