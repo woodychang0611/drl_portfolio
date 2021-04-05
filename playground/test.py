@@ -9,8 +9,10 @@ import numpy as np
 import pandas as pd
 from itertools import combinations
 from pandas import Timestamp
-t = Timestamp('2020-01-31')
 
-print (t)
-t = common.offset_date(t,2,'weeks')
-print(t)
+
+
+action = np.zeros(10)
+action = np.random.rand(*action.shape)
+while True:
+    print(np.random.randint(low=1,high=3))

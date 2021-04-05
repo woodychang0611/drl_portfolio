@@ -12,10 +12,12 @@ from pandas import DataFrame
 
 class MarketEnv(gym.Env):
     def __init__(self, investments: DataFrame, features: DataFrame, show_info=False, trade_freq='days',
-                 fix_start_time=False, min_trade_pecentage=0.1):
+                 trade_pecentage=0.1):
         self._load_data(investments=investments, features=features, show_info=show_info, trade_freq=trade_freq)
         self._init_action_space()
         self._init_observation_space()
+        self.trade_pecentage = trade_pecentage
+        self.start_index, self.current_index, self.end_index = 0, 0, 0
         self.seed()
         self.reset()
 
@@ -73,12 +75,50 @@ class MarketEnv(gym.Env):
         return [seed]
 
     def step(self, action):
-        state, reward, done = 1, 1, 1, 1
-        return state, reward, done, {}
+        if self.current_index > self.end_index:
+            raise Exception(f'current_index {current_index} exceed end_index{self.end_index}')
+        weights = self._get_weights(action)
+        done = True if (self.current_index >= self.end_index) else False
+
+        reward = 1
+        state = self._get_state()
+        performance = self._get_performance()
+        self.current_index += 1
+
+        info = {
+            "test": "test",
+        }
+        return state, reward, done, info
 
     def render(self):
         pass
 
     def reset(self):
-        state = 1
-        return state
+        total_index_count = len(self.investments.index)
+        last_index = total_index_count-1
+        if (self.trade_pecentage >= 1):
+            self.start_index = 0
+            self.end_index = last_index
+        else:
+            self.start_index = np.random.randint(low=0, high=last_index*(1-self.trade_pecentage))
+            self.end_index = int(self.start_index + total_index_count*self.trade_pecentage)
+            self.end_index = min(self.end_index, last_index)
+        print(f'total: {total_index_count}, start index: {self.start_index}, end index: {self.end_index}')
+        self.current_index = self.start_index
+        return self._get_state()
+
+    def _get_weights(self, action: np.ndarray):
+        if action.sum() == 0:
+            action = np.random.rand(*action.shape)
+        weight = action / action.sum()
+        return weight
+
+    def _get_state(self):
+        print(f'Get state for date: {self.investments.index[self.current_index]}')
+        return np.zeros(self.observation_space.shape)
+
+    def _get_performance(self):
+        start_date = self.investments.index[self.start_index]
+        current_date = self.investments.index[self.current_index]
+        trade_days = (current_date-start_date).days
+        print()
