@@ -12,7 +12,5 @@ from pandas import Timestamp
 
 
 
-action = np.zeros(10)
-action = np.random.rand(*action.shape)
-while True:
-    print(np.random.randint(low=1,high=3))
+action = np.concatenate( (np.zeros(3),np.ones(5)) )
+print(action)
