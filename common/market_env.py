@@ -93,21 +93,25 @@ class MarketEnv(gym.Env):
             action = np.random.rand(*action.shape)
         self.weights = action / action.sum()
 
+        self.current_index += 1
         # update investments and wealth
-        self.investments = self.wealth * self.weights
-        next_return = self.returns.iloc[self.current_index+1]
+        previous_investments = self.investments
+        target_investments = self.wealth * self.weights
+
+        # todo add trading cost
+        self.investments = target_investments
+
+        inv_return = self.returns.iloc[self.current_index]
         previous_wealth = self.wealth
         # w_n = w_n-1 * (1+r)
-        self.wealth = np.dot(self.investments, (1+next_return))
+        self.wealth = np.dot(self.investments, (1 + inv_return))
         print(self.wealth)
 
-        reward = 1
-        performance = self._get_performance()
-        self.current_index += 1
+        #todo define new reward function
+        reward = self.wealth - previous_wealth
+
+        info = self._get_info()
         state = self._get_state()
-        info = {
-            "test": "test",
-        }
         return state, reward, done, info
 
     def render(self):
@@ -136,7 +140,16 @@ class MarketEnv(gym.Env):
             raise Exception('Shape of state {state.shape} is incorrect should be {self.observation_space.shape}')
         return state
 
-    def _get_performance(self):
+    def _get_info(self):
         start_date = self.returns.index[self.start_index]
         current_date = self.returns.index[self.current_index]
         trade_days = (current_date-start_date).days
+        
+        cagr = math.pow (self.wealth, 365/trade_days) - 1
+        info ={
+            'trade_days':trade_days,
+            'wealths':self.wealth,
+            'cagr':cagr,
+        } 
+        return info
+

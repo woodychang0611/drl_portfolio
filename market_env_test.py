@@ -33,3 +33,4 @@ policy = model.policy
 while not done:
     actions = policy.get_actions(state)
     state, reward, done, info = env.step(actions)
+    print(info)

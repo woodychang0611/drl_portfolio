@@ -92,9 +92,9 @@ cov_df = investments_summary.join(cov_df, how='right')
 cov_df.to_csv(os.path.join(output_folder, 'selected_cov.csv'))
 print(selected_investments)
 
-#Create data for traininng 
+# Create data for traininng
 df_train = investments_returns[investments_returns.index < validation_start_date][selected_investments]
 df_train.to_csv(os.path.join(current_folder, './data/investments_returns_train.csv'))
-#Create data for Validation
+# Create data for Validation
 df_validation = investments_returns[investments_returns.index >= validation_start_date][selected_investments]
 df_validation.to_csv(os.path.join(current_folder, './data/investments_returns_validation.csv'))
