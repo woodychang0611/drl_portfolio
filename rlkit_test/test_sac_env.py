@@ -50,8 +50,6 @@ def experiment(variant):
     expl_env = get_env()
     eval_env = get_env()
 
-    obs_dim = expl_env.observation_space.low.size
-    action_dim = eval_env.action_space.low.size
     post_epoch_funcs = []
     M = variant['layer_size']
     trainer = get_sac_model(env=eval_env, hidden_sizes=[M, M])

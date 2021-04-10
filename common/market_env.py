@@ -10,14 +10,33 @@ from random import uniform
 from pandas import DataFrame
 
 
+def proration_weights(action):
+    if action.sum() == 0:
+        action = np.random.rand(*action.shape)
+    return action / action.sum()
+
+
+def simple_return_reward(env):
+    reward = env.wealth-env.previous_wealth
+    return reward
+
+
+def resample_relative_changes(df, rule):
+    return df.apply(lambda x: 1+x).resample(rule).prod().apply(lambda x: x-1)
+
+
 class MarketEnv(gym.Env):
     def __init__(self, returns: DataFrame, features: DataFrame, show_info=False, trade_freq='days',
+                 action_to_weights_func=proration_weights,
+                 reward_func=simple_return_reward,
                  trade_pecentage=0.1):
         self._load_data(returns=returns, features=features, show_info=show_info, trade_freq=trade_freq)
         self._init_action_space()
         self._init_observation_space()
         self.trade_pecentage = trade_pecentage
         self.start_index, self.current_index, self.end_index = 0, 0, 0
+        self.action_to_weights_func = action_to_weights_func
+        self.reward_func = reward_func
         self.seed()
         self.reset()
 
@@ -38,15 +57,18 @@ class MarketEnv(gym.Env):
         # make sure dataframes are sorted
         returns = returns.sort_index().sort_index(axis=1)
         features = features.sort_index().sort_index(axis=1)
-        # Only keep data as investments
+
+        # Scale features to -1 and 1
+        for col in features.columns:
+            features[col] = features[col]/max(abs(features[col].max()), abs(features[col].min()))
+
+        # Only keep feature data within peroid of investments returns
         features = features[(features.index.isin(returns.index))]
 
         # resample based on trade frequency e.g. weeks or months
-        returns = returns.apply(lambda x: 1+x).resample(resample_rules[trade_freq]).prod().apply(lambda x: x-1)
-        features = features.apply(lambda x: 1+x).resample(resample_rules[trade_freq]).prod().apply(lambda x: x-1)
-        # Scale to -1 and 1
-        for col in features.columns:
-            features[col] = features[col]/max(abs(features[col].max()), abs(features[col].min()))
+        returns = resample_relative_changes(returns, resample_rules[trade_freq])
+        features = resample_relative_changes(features, resample_rules[trade_freq])
+
         self.features = features
         self.returns = returns
         returns.to_csv('returns.csv')
@@ -83,15 +105,13 @@ class MarketEnv(gym.Env):
         return [seed]
 
     def step(self, action):
-        print(f'step {self.returns.index[self.current_index]}')
+        #print(f'step {self.returns.index[self.current_index]}')
         if self.current_index > self.end_index:
             raise Exception(f'current_index {current_index} exceed end_index{self.end_index}')
 
         done = True if (self.current_index >= self.end_index) else False
         # update weight
-        if action.sum() == 0:
-            action = np.random.rand(*action.shape)
-        self.weights = action / action.sum()
+        self.weights = self.action_to_weights_func(action)
 
         self.current_index += 1
         # update investments and wealth
@@ -102,13 +122,13 @@ class MarketEnv(gym.Env):
         self.investments = target_investments
 
         inv_return = self.returns.iloc[self.current_index]
-        previous_wealth = self.wealth
+        self.previous_wealth = self.wealth
         # w_n = w_n-1 * (1+r)
         self.wealth = np.dot(self.investments, (1 + inv_return))
-        print(self.wealth)
+        #print(self.wealth)
 
-        #todo define new reward function
-        reward = self.wealth - previous_wealth
+        # todo define new reward function
+        reward = self.reward_func(self)
 
         info = self._get_info()
         state = self._get_state()
@@ -127,10 +147,11 @@ class MarketEnv(gym.Env):
             self.start_index = np.random.randint(low=0, high=last_index*(1-self.trade_pecentage))
             self.end_index = int(self.start_index + total_index_count*self.trade_pecentage)
             self.end_index = min(self.end_index, last_index)
-        print(f'total: {total_index_count}, start index: {self.start_index}, end index: {self.end_index}')
+        #print(f'total: {total_index_count}, start index: {self.start_index}, end index: {self.end_index}')
         self.current_index = self.start_index
         self.investments = np.zeros(self.investments_count)
         self.weights = np.zeros(self.investments_count)
+        self.previous_wealth=1
         self.wealth = 1
         return self._get_state()
 
@@ -144,12 +165,11 @@ class MarketEnv(gym.Env):
         start_date = self.returns.index[self.start_index]
         current_date = self.returns.index[self.current_index]
         trade_days = (current_date-start_date).days
-        
-        cagr = math.pow (self.wealth, 365/trade_days) - 1
-        info ={
-            'trade_days':trade_days,
-            'wealths':self.wealth,
-            'cagr':cagr,
-        } 
-        return info
 
+        cagr = math.pow(self.wealth, 365/trade_days) - 1
+        info = {
+            'trade_days': trade_days,
+            'wealths': self.wealth,
+            'cagr': cagr,
+        }
+        return info
