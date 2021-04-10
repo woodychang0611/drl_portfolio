@@ -98,4 +98,8 @@ variant = dict(
         batch_size=256,
     ),
 )
+
+setup_logger('name-of-experiment', variant=variant,
+                snapshot_mode='gap_and_last', snapshot_gap=20, log_dir=log_dir)
+
 train_model(variant)
