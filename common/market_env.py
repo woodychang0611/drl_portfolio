@@ -71,7 +71,6 @@ class MarketEnv(gym.Env):
 
         self.features = features
         self.returns = returns
-        returns.to_csv('returns.csv')
         if show_info:
             sd = returns.index[0]
             ed = returns.index[-1]
