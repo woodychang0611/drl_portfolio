@@ -17,7 +17,7 @@ def proration_weights(action):
 
 
 def simple_return_reward(env):
-    reward = env.wealth-env.previous_wealth
+    reward = - (env.wealth-env.previous_wealth)
     return reward
 
 
@@ -111,7 +111,7 @@ class MarketEnv(gym.Env):
         done = True if (self.current_index >= self.end_index) else False
         # update weight
         self.weights = self.action_to_weights_func(action)
-
+        #print(self.weights)
         self.current_index += 1
         # update investments and wealth
         previous_investments = self.investments

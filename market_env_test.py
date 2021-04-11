@@ -13,6 +13,7 @@ import rlkit.torch.pytorch_util as ptu
 import numpy as np
 from datetime import datetime
 from rlkit.torch.torch_rl_algorithm import TorchBatchRLAlgorithm
+import torch
 
 def load_dataset():
     current_folder = os.path.dirname(__file__)
@@ -27,79 +28,39 @@ def load_dataset():
 
 gym.envs.register(id='MarketEnv-v0', entry_point='common.market_env:MarketEnv', max_episode_steps=1000)
 
+def fix_action_policy(action):
+    class dummy_policy(object):
+        def __init__(self):
+            self.get_actions  = lambda env: action
+    return dummy_policy()
 
 
-def my_eval_policy(env, algorithm, epoch, eval_result, output_csv):
+def eval_policy(env, policy):
     done = False
-    policy = model.policy
+    state = env.reset()
     while not done:
-        actions = policy.get_actions(state)
-        state, reward, done, info = env.step(actions)
+        action = policy.get_actions(state)
+        state, reward, done, info = env.step(action)
+        print(action)
         print(reward)
         print(info)
 
-def train_model(variant):
-    df_ret_train, df_ret_val, df_feature = load_dataset()
-    expl_env = NormalizedBoxEnv(gym.make('MarketEnv-v0', returns=df_ret_train, features=df_feature,
-                                      trade_freq='weeks', show_info=False, trade_pecentage=0.2))
+df_ret_train, df_ret_val, df_feature = load_dataset()
+expl_env = NormalizedBoxEnv(gym.make('MarketEnv-v0', returns=df_ret_train, features=df_feature,
+                                    trade_freq='weeks', show_info=False, trade_pecentage=0.2))
 
-    eval_env = NormalizedBoxEnv(gym.make('MarketEnv-v0', returns=df_ret_val, features=df_feature,
-                                    trade_freq='weeks', show_info=False, trade_pecentage=1.0))
+eval_env = NormalizedBoxEnv(gym.make('MarketEnv-v0', returns=df_ret_val, features=df_feature,
+                                trade_freq='weeks', show_info=False, trade_pecentage=1.0))
 
-    post_epoch_funcs = []
-    M = variant['layer_size']
-    trainer = get_sac_model(env=eval_env, hidden_sizes=[M, M])
-    policy = trainer.policy
-    eval_policy = MakeDeterministic(policy)
-    eval_path_collector = MdpPathCollector(
-        eval_env,
-        eval_policy,
-    )
-    expl_path_collector = MdpPathCollector(
-        expl_env,
-        policy,
-    )
-    replay_buffer = EnvReplayBuffer(
-        variant['replay_buffer_size'],
-        expl_env,
-    )
-    algorithm = TorchBatchRLAlgorithm(
-        trainer=trainer,
-        exploration_env=expl_env,
-        evaluation_env=eval_env,
-        exploration_data_collector=expl_path_collector,
-        evaluation_data_collector=eval_path_collector,
-        replay_buffer=replay_buffer,
-        **variant['algorithm_kwargs']
-    )
+file = r"C:\Users\Woody\Documents\git repository\nccu-thesis\code\output\saved\itr_380.pkl"
+M=256
+trainer = get_sac_model(env=eval_env, hidden_sizes=[M, M])
+trainer.policy.parameters =  torch.load(file)['trainer/policy']
 
-    algorithm.to(ptu.device)
-    algorithm.train()
+policy = trainer.policy
+action = np.full(10,-1)
+action[5]=1
+policy = fix_action_policy(action)
 
-
-ptu.set_gpu_mode(True)  
-
-timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-log_dir = f"./output/train_out_{timestamp}/"
-
-variant = dict(
-    algorithm="SAC",
-    version="normal",
-    log_dir=log_dir,
-    layer_size=256,
-    replay_buffer_size=int(1E6),
-    algorithm_kwargs=dict(
-        num_epochs=2500,
-        num_eval_steps_per_epoch=5000,
-        num_trains_per_train_loop=10000,
-        num_expl_steps_per_train_loop=1000,
-        min_num_steps_before_training=1000,
-        max_path_length=1000,
-        batch_size=256,
-    ),
-)
-
-setup_logger('name-of-experiment', variant=variant,
-                snapshot_mode='gap_and_last', snapshot_gap=20, log_dir=log_dir)
-
-train_model(variant)
+eval_policy(eval_env,policy)
+#df_ret_val.to_csv('val.csv')
