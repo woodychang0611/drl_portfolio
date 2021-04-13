@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import math
-
 import numpy as np
-
 import gym
 from gym import spaces
 from gym.utils import seeding
@@ -17,7 +15,7 @@ def proration_weights(action):
 
 
 def simple_return_reward(env):
-    reward = - (env.wealth-env.previous_wealth)
+    reward =  (env.wealth-env.previous_wealth)
     return reward
 
 
