@@ -47,8 +47,8 @@ def train_model(variant):
                                     trade_freq='weeks', show_info=False, trade_pecentage=1.0))
 
     post_epoch_funcs = []
-    M = variant['layer_size']
-    trainer = get_sac_model(env=eval_env, hidden_sizes=[M, M])
+    hidden_sizes = variant['hidden_sizes']
+    trainer = get_sac_model(env=eval_env, hidden_sizes=hidden_sizes)
     policy = trainer.policy
     eval_policy = MakeDeterministic(policy)
     eval_path_collector = MdpPathCollector(
@@ -78,15 +78,16 @@ def train_model(variant):
 
 
 ptu.set_gpu_mode(True)  
-
+hidden_sizes =[256,256]
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-log_dir = f"./output/train_out_{timestamp}/"
+layer_str = "_".join(map(str,hidden_sizes))
+log_dir = f"./output/train_out_{layer_str}_{timestamp}/"
 
 variant = dict(
     algorithm="SAC",
     version="normal",
     log_dir=log_dir,
-    layer_size=256,
+    hidden_sizes=hidden_sizes,
     replay_buffer_size=int(1E6),
     algorithm_kwargs=dict(
         num_epochs=2500,
