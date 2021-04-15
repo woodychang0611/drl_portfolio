@@ -4,7 +4,7 @@ from rlkit.torch.sac.sac import SACTrainer
 from rlkit.torch.networks import ConcatMlp
 
 
-def get_sac_model(env, hidden_sizes=[256, 256]):
+def get_sac_model(env, hidden_sizes=[256, 256],reward_scale = 1):
     obs_dim = env.observation_space.low.size
     action_dim = env.action_space.low.size
     qf1 = ConcatMlp(
@@ -45,7 +45,7 @@ def get_sac_model(env, hidden_sizes=[256, 256]):
         target_update_period=1,
         policy_lr=3E-4,
         qf_lr=3E-4,
-        reward_scale=1,
+        reward_scale=reward_scale,
         use_automatic_entropy_tuning=True
     )
     return trainer

@@ -48,9 +48,11 @@ def train_model(variant):
 
     post_epoch_funcs = []
     hidden_sizes = variant['hidden_sizes']
-    trainer = get_sac_model(env=eval_env, hidden_sizes=hidden_sizes)
+    reward_scale = variant['reward_scale']
+    trainer = get_sac_model(env=eval_env, hidden_sizes=hidden_sizes,reward_scale=reward_scale)
     policy = trainer.policy
-    eval_policy = MakeDeterministic(policy)
+    #eval_policy = MakeDeterministic(policy)
+    eval_policy= policy
     eval_path_collector = MdpPathCollector(
         eval_env,
         eval_policy,
@@ -79,9 +81,10 @@ def train_model(variant):
 
 ptu.set_gpu_mode(True)  
 hidden_sizes =[256,256]
+reward_scale=100
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 layer_str = "_".join(map(str,hidden_sizes))
-log_dir = f"./output/train_out_{layer_str}_{timestamp}/"
+log_dir = f"./output/train_out_{reward_scale}_{layer_str}_{timestamp}/"
 
 variant = dict(
     algorithm="SAC",
@@ -91,13 +94,14 @@ variant = dict(
     replay_buffer_size=int(1E6),
     algorithm_kwargs=dict(
         num_epochs=2500,
-        num_eval_steps_per_epoch=5000,
-        num_trains_per_train_loop=10000,
+        num_eval_steps_per_epoch=1000,
+        num_trains_per_train_loop=3000,
         num_expl_steps_per_train_loop=1000,
         min_num_steps_before_training=1000,
         max_path_length=1000,
         batch_size=256,
     ),
+    reward_scale=reward_scale,
 )
 
 setup_logger('name-of-experiment', variant=variant,
