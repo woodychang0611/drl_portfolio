@@ -39,7 +39,7 @@ class finance_utility:
             plt.show()
             return
         else:
-            return min(0, (x[e]-x[s])/(1+x[s]))
+            return min(0, (x[e]-x[s])/x[s])
 
     @staticmethod
     def cagr(start, end, len):
