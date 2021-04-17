@@ -25,19 +25,12 @@ if not os.path.exists(output_folder):
 investments_returns = pd.read_csv(investments_returns_csv, parse_dates=[
     'Date'], index_col=['Date'])
 investments_returns = investments_returns.sort_index()
-investments_prices = pd.DataFrame(index=investments_returns.index)
 investments_summary = pd.read_csv(investments_summary, index_col=0)
 investment_names = investments_returns.columns[:]
 
 
 def average_return(s):
     return math.pow(np.prod(s+1), 1.0/len(s))-1
-
-
-for name in investment_names:
-    investments_prices[name] = finance_utility.prices_from_returns(
-        1, investments_returns[name])
-
 
 def get_aum(s):
     return investments_summary['AUM'][s]
@@ -86,11 +79,16 @@ while len(selected_investments) > investment_count:
     cov_df = cov_df.drop(drop_name, axis=1)
     selected_investments.remove(drop_name)
 
+selected_investments=sorted(selected_investments)
+cov_df = cov_df.sort_index()
 print(f'selected_investments:{selected_investments}')
 print(len(cov_df.columns))
 cov_df = investments_summary.join(cov_df, how='right')
 cov_df.to_csv(os.path.join(output_folder, 'selected_cov.csv'))
 print(selected_investments)
+
+
+cov_df.to_csv(os.path.join(current_folder, './data/selected_investments.csv'))
 
 # Create data for traininng
 df_train = investments_returns[investments_returns.index < validation_start_date][selected_investments]
