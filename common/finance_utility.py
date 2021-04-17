@@ -29,7 +29,7 @@ class finance_utility:
     def _drawdown(x: pd.core.series.Series, display):
         if (not isinstance(x, (pd.core.series.Series))):
             raise TypeError(f'type {type(x)} not supported')
-        e = (np.maximum.accumulate(x) - x).idxmax()  # end of the period
+        e = ((np.maximum.accumulate(x) - x)/np.maximum.accumulate(x)).idxmax()  # end of the period
         if (isinstance(e, float) and math.isnan(e)):
             e = x.index[0]
         s = e if (e == x.index[0]) else (x[:e]).idxmax()

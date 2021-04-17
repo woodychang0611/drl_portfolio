@@ -48,19 +48,7 @@ investments_summary['std'] = pd.Series(dtype='float64')
 investments_summary['cagr'] = pd.Series(dtype='float64')
 investments_summary['sharpe'] = pd.Series(dtype='float64')
 
-for name in investment_names:
-    prices = finance_utility.prices_from_returns(1, investments_returns[name])
-    # Wiener process
-    std = investments_returns[name].std()*math.sqrt(252)
-    duration = (investments_returns[name].index[-1] -
-                investments_returns[name].index[0]).days
-    cagr_value = finance_utility.cagr(prices[0], prices[-1], duration)
-    sharpe = cagr_value/std
-    mdd = finance_utility.drawdown(prices)
-    investments_summary.loc[name, 'mdd'] = mdd
-    investments_summary.loc[name, 'std'] = std
-    investments_summary.loc[name, 'cagr'] = cagr_value
-    investments_summary.loc[name, 'sharpe'] = sharpe
+
 # Start from all investments
 selected_investments = set(investment_names)
 
@@ -81,8 +69,35 @@ while len(selected_investments) > investment_count:
 
 selected_investments=sorted(selected_investments)
 cov_df = cov_df.sort_index()
-print(f'selected_investments:{selected_investments}')
-print(len(cov_df.columns))
+print(f'selected_investments:{selected_investments}, count:{len(selected_investments)}')
+
+for name in selected_investments:
+    prices = finance_utility.prices_from_returns(1, investments_returns[name])
+    # Wiener process
+    std = investments_returns[name].std()*math.sqrt(252)
+    duration = (investments_returns[name].index[-1] -
+                investments_returns[name].index[0]).days
+    cagr_value = finance_utility.cagr(prices[0], prices[-1], duration)
+    sharpe = cagr_value/std
+    mdd = finance_utility.drawdown(prices)
+    draw_downs = prices.rolling(252).apply(func=finance_utility.drawdown,raw=False)
+    df = pd.DataFrame(index=prices.index)
+    df['dd']=draw_downs
+    df['price']= prices
+    df['ret'] = investments_returns[name]
+
+    df.to_csv(os.path.join(output_folder, f'{name}.csv'))
+      
+    investments_summary.loc[name, 'mdd'] = mdd
+    investments_summary.loc[name, 'mean_dd'] =  draw_downs.mean()
+    investments_summary.loc[name, 'VaR99'] =  draw_downs.quantile(0.01)
+    investments_summary.loc[name, 'VaR90'] =  draw_downs.quantile(0.1)
+    investments_summary.loc[name, 'max_dd'] =  draw_downs.min()    
+    investments_summary.loc[name, 'std'] = std
+    investments_summary.loc[name, 'cagr'] = cagr_value
+    investments_summary.loc[name, 'sharpe'] = sharpe
+
+
 cov_df = investments_summary.join(cov_df, how='right')
 cov_df.to_csv(os.path.join(output_folder, 'selected_cov.csv'))
 print(selected_investments)
