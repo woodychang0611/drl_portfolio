@@ -81,7 +81,7 @@ def train_model(variant):
 
 ptu.set_gpu_mode(True)  
 hidden_sizes =[256,256]
-reward_scale=100
+reward_scale=3000
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 layer_str = "_".join(map(str,hidden_sizes))
 log_dir = f"./output/train_out_{reward_scale}_{layer_str}_{timestamp}/"

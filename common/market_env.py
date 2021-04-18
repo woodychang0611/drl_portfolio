@@ -19,6 +19,9 @@ def simple_return_reward(env):
     return reward
 
 
+def resample_backfill(df, rule):
+    return df.apply(lambda x: 1+x).resample(rule).backfill()
+
 def resample_relative_changes(df, rule):
     return df.apply(lambda x: 1+x).resample(rule).prod().apply(lambda x: x-1)
 
@@ -56,16 +59,14 @@ class MarketEnv(gym.Env):
         returns = returns.sort_index().sort_index(axis=1)
         features = features.sort_index().sort_index(axis=1)
 
+        features = resample_backfill(features, resample_rules[trade_freq]).dropna()
         # Scale features to -1 and 1
         for col in features.columns:
             features[col] = features[col]/max(abs(features[col].max()), abs(features[col].min()))
-
-        # Only keep feature data within peroid of investments returns
-        features = features[(features.index.isin(returns.index))]
-
         # resample based on trade frequency e.g. weeks or months
         returns = resample_relative_changes(returns, resample_rules[trade_freq])
-        features = resample_relative_changes(features, resample_rules[trade_freq])
+        # Only keep feature data within peroid of investments returns
+        features = features[(features.index.isin(returns.index))]
 
         self.features = features
         self.returns = returns

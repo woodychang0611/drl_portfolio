@@ -10,27 +10,17 @@ from common.finance_utility import finance_utility
 
 
 data_sources={
+    "VIX":("yahoo", "^VIX", "rate"),    
     "VIX":("yahoo", "^VIX", "raw"),
-    "VFINX":("yahoo","VFINX", "raw"),
+    "SP500":("yahoo", "^GSPC", "raw"),
     "QQQ":("yahoo","QQQ", "raw"),
-    #"M1V":("fred","M1V","rate"),
-    #"M2V":("fred","M2V","rate"),
     "Crude Oil Prices: Brent - Europe":("fred","DCOILBRENTEU","raw"),
     "5-Year Treasury Constant Maturity Rate":("fred","DGS5","rate"),
     "10-Year Treasury Constant Maturity Rate":("fred","DGS10","rate"),    
     "30-Year Treasury Constant Maturity Rate":("fred","DGS30","rate"),
     "5-Year Breakeven Inflation Rate":("fred", "T5YIE","rate"),
     "10-Year Breakeven Inflation Rate": ("fred","T10YIE","rate"),
-    #"Unemployment Rate" : ("fred","UNRATE","rate"),
-    "GOLD":("fred","GOLDPMGBD228NLBM","rate"),
-    #"Stress Index":("fred","STLFSI2","rate"),
-    
-}
-
-data_sources={
-    "VIX":("yahoo", "^VIX", "raw"),
-    "VFINX":("yahoo","VFINX", "raw"),
-    "QQQ":("yahoo","QQQ", "raw"),
+    "GOLD":("fred","GOLDPMGBD228NLBM","raw"),
 }
 
 sd = datetime(2007,1,1)
@@ -41,12 +31,27 @@ features_dataframe.index.name="Date"
 for name in data_sources.keys():
     src, symbol,kind = data_sources[name]
     if (src=="yahoo"):
-        df = (pdr.get_data_yahoo(symbols=symbol, start=sd, end=ed)["Adj Close"]).rename(name)
+        series = (pdr.get_data_yahoo(symbols=symbol, start=sd, end=ed)["Adj Close"]).rename(name)
     elif (src=="fred"):
-        df = (pdr.get_data_fred(symbols=symbol, start=sd, end=ed))[symbol].rename(name)
-    features_dataframe[name]=df
+        series = (pdr.get_data_fred(symbols=symbol, start=sd, end=ed))[symbol].rename(name)
 
+    if kind == "rate":
+        features_dataframe[name]=series
+    elif kind =="raw":
+        for period in (5,20):            
+            extended_name = f"{name}_std_{period}"
+            features_dataframe[extended_name] = series.rolling(period).std()
+            extended_name = f"{name}_skew_{period}"
+            features_dataframe[extended_name] = series.rolling(period).skew()
+            extended_name = f"{name}_kurt_{period}"
+            features_dataframe[extended_name] = series.rolling(period).kurt()
+    else:
+        raise Exception(f"{kind} not supported")
+        pass
 #print(features_dataframe)
 features_dataframe = features_dataframe.dropna()
 features_dataframe.to_csv('./data/features_v02.csv')
 
+b = features_dataframe.resample('W').backfill()
+print(b)
+b.to_csv('test.csv')
