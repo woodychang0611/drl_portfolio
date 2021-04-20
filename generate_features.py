@@ -7,11 +7,11 @@ import matplotlib.pyplot as plt
 import math
 import numpy as np
 from common.finance_utility import finance_utility
-
+from collections import OrderedDict
 
 data_sources={
     "VIX":("yahoo", "^VIX", "rate"),    
-    "VIX":("yahoo", "^VIX", "raw"),
+    "VIX_raw":("yahoo", "^VIX", "raw"),
     "SP500":("yahoo", "^GSPC", "raw"),
     "QQQ":("yahoo","QQQ", "raw"),
     "Crude Oil Prices: Brent - Europe":("fred","DCOILBRENTEU","raw"),
@@ -23,12 +23,19 @@ data_sources={
     "GOLD":("fred","GOLDPMGBD228NLBM","raw"),
 }
 
+use_inv_as_feature=True
+if(use_inv_as_feature):
+    current_folder = os.path.dirname(__file__)
+    inv = pd.read_csv( os.path.join(current_folder, './data/selected_investments.csv'), index_col=0)
+    for name in inv.index:
+        data_sources[name] = ("yahoo", name, "raw")
+
 sd = datetime(2007,1,1)
 ed = datetime(2021,4,15)
 
 features_dataframe= pd.DataFrame(index=pd.date_range(start=sd,end=ed, freq='D'))
 features_dataframe.index.name="Date"
-for name in data_sources.keys():
+for name in sorted(data_sources.keys()):
     src, symbol,kind = data_sources[name]
     if (src=="yahoo"):
         series = (pdr.get_data_yahoo(symbols=symbol, start=sd, end=ed)["Adj Close"]).rename(name)
@@ -51,7 +58,3 @@ for name in data_sources.keys():
 #print(features_dataframe)
 features_dataframe = features_dataframe.dropna()
 features_dataframe.to_csv('./data/features_v02.csv')
-
-b = features_dataframe.resample('W').backfill()
-print(b)
-b.to_csv('test.csv')
