@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import math
+import os
 import numpy as np
 import gym
 from gym import spaces
@@ -67,7 +68,8 @@ class MarketEnv(gym.Env):
         returns = resample_relative_changes(returns, resample_rules[trade_freq])
         # Only keep feature data within peroid of investments returns
         features = features[(features.index.isin(returns.index))]
-
+        # Only keep investment retuns with features
+        returns = returns[(returns.index.isin(features.index))]
         self.features = features
         self.returns = returns
         if show_info:
@@ -85,7 +87,7 @@ class MarketEnv(gym.Env):
         self.action_space = spaces.Box(low=self.min_action, high=self.max_action, dtype=np.float32)
 
     def _init_observation_space(self):
-        observation_space_size = self.investments_count+self.features_count
+        observation_space_size = self.features_count
         self.low_state = np.full(observation_space_size, -1)
         self.high_state = np.ones(observation_space_size)
         self.observation_space = spaces.Box(low=self.low_state, high=self.high_state, dtype=np.float32)
@@ -154,7 +156,8 @@ class MarketEnv(gym.Env):
         return self._get_state()
 
     def _get_state(self):
-        state = np.concatenate((self.weights, self.features.iloc[self.current_index]))
+        index = self.current_index
+        state = self.features.iloc[index]
         if (state.shape != self.observation_space.shape):
             raise Exception('Shape of state {state.shape} is incorrect should be {self.observation_space.shape}')
         return state
