@@ -9,6 +9,7 @@ from pandas import Timestamp
 import os
 import common
 from common.trainer import get_sac_model
+from common.market_env import MarketEnv
 import rlkit.torch.pytorch_util as ptu
 import numpy as np
 from datetime import datetime
@@ -19,7 +20,7 @@ def load_dataset():
     current_folder = os.path.dirname(__file__)
     ret_csv_train = os.path.join(current_folder, './data/investments_returns_train.csv')
     ret_csv_val = os.path.join(current_folder, './data/investments_returns_validation.csv')
-    features_csv = os.path.join(current_folder, './data/features.csv')
+    features_csv = os.path.join(current_folder, './data/features_v02.csv')
     df_ret_train = pd.read_csv(ret_csv_train, parse_dates=['Date'], index_col=['Date'])
     df_ret_val = pd.read_csv(ret_csv_val, parse_dates=['Date'], index_col=['Date'])
     df_feature = pd.read_csv(features_csv, parse_dates=['Date'], index_col=['Date'])
@@ -38,29 +39,32 @@ def fix_action_policy(action):
 def eval_policy(env, policy):
     done = False
     state = env.reset()
+    i =0
     while not done:
+        i+=1
         action = policy.get_actions(state)
         state, reward, done, info = env.step(action)
+        print(i)
         print(action)
         print(reward)
         print(info)
 
 df_ret_train, df_ret_val, df_feature = load_dataset()
 expl_env = NormalizedBoxEnv(gym.make('MarketEnv-v0', returns=df_ret_train, features=df_feature,
-                                    trade_freq='weeks', show_info=False, trade_pecentage=0.2))
+                                    trade_freq='weeks', show_info=False, trade_pecentage=1.0))
 
 eval_env = NormalizedBoxEnv(gym.make('MarketEnv-v0', returns=df_ret_val, features=df_feature,
                                 trade_freq='weeks', show_info=False, trade_pecentage=1.0))
 
-file = r"C:\Users\Woody\Documents\git repository\nccu-thesis\code\output\saved\itr_380.pkl"
-M=256
-trainer = get_sac_model(env=eval_env, hidden_sizes=[M, M])
-trainer.policy.parameters =  torch.load(file)['trainer/policy']
+#Load model from pkl file
+#file = r"C:\Users\Woody\Documents\git repository\nccu-thesis\code\output\saved\itr_380.pkl"
+#trainer = get_sac_model(env=eval_env)
+#trainer.policy.parameters =  torch.load(file)['trainer/policy']
 
 policy = trainer.policy
 action = np.full(10,-1)
 action[5]=1
 policy = fix_action_policy(action)
-
-eval_policy(eval_env,policy)
+env = eval_env
+eval_policy(env,policy)
 #df_ret_val.to_csv('val.csv')
