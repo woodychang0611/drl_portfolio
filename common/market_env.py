@@ -137,8 +137,7 @@ class MarketEnv(gym.Env):
 
     def reset(self):
         total_index_count = len(self.returns.index)
-        #fix later!!!!
-        last_index = total_index_count-20
+        last_index = total_index_count-2
         if (self.trade_pecentage >= 1):
             self.start_index = 0
             self.end_index = last_index
