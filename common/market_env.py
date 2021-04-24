@@ -157,7 +157,7 @@ class MarketEnv(gym.Env):
 
     def _get_state(self):
         index = self.current_index
-        state = self.features.iloc[index]
+        state = self.features.iloc[index].to_numpy()
         if (state.shape != self.observation_space.shape):
             raise Exception('Shape of state {state.shape} is incorrect should be {self.observation_space.shape}')
         return state
