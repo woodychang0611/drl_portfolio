@@ -45,7 +45,7 @@ for name in sorted(data_sources.keys()):
     if kind == "rate":
         features_dataframe[name]=series
     elif kind =="raw":
-        for period in (5,20):            
+        for period in (5,20,60):            
             extended_name = f"{name}_std_{period}"
             features_dataframe[extended_name] = series.rolling(period).std()
             extended_name = f"{name}_skew_{period}"
