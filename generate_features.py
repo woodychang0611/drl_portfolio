@@ -11,11 +11,11 @@ from collections import OrderedDict
 
 data_sources={
     "VIX":("yahoo", "^VIX", "raw"),
-    "DJIA":("fred", "DJIA", "raw"),
+    "Dow Jones Industrial Average":("yahoo", "^DJI", "raw"),
     "NASDAQ Composite Index":("fred","NASDAQCOM", "raw"),
     "US Dollar/USDX":("yahoo","DX-Y.NYB", "raw"),
-    "JPY/USD":("yahoo","JPYUSD=X", "raw"),
-    "EUR/USD":("yahoo","EURUSD=X", "raw"),
+   # "JPY/USD":("yahoo","JPYUSD=X", "raw"),
+  #  "EUR/USD":("yahoo","EURUSD=X", "raw"),
     "Crude Oil Prices: Brent - Europe":("fred","DCOILBRENTEU","raw"),
     "GOLD":("fred","GOLDPMGBD228NLBM","raw"),
     "5-Year Treasury Constant Maturity Rate":("fred","DGS5","rate"),
