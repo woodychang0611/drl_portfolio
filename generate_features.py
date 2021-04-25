@@ -10,20 +10,19 @@ from common.finance_utility import finance_utility
 from collections import OrderedDict
 
 data_sources={
-    "VIX":("yahoo", "^VIX", "rate"),    
-    "VIX_raw":("yahoo", "^VIX", "raw"),
+    "VIX":("yahoo", "^VIX", "raw"),
     "DJIA":("fred", "DJIA", "raw"),
     "NASDAQ Composite Index":("fred","NASDAQCOM", "raw"),
     "US Dollar/USDX":("yahoo","DX-Y.NYB", "raw"),
     "JPY/USD":("yahoo","JPYUSD=X", "raw"),
     "EUR/USD":("yahoo","EURUSD=X", "raw"),
-    "Crude Oil Prices: Brent - Europe":("fred","DCOILBRENTEU","rate"),
+    "Crude Oil Prices: Brent - Europe":("fred","DCOILBRENTEU","raw"),
+    "GOLD":("fred","GOLDPMGBD228NLBM","raw"),
     "5-Year Treasury Constant Maturity Rate":("fred","DGS5","rate"),
     "10-Year Treasury Constant Maturity Rate":("fred","DGS10","rate"),    
     "30-Year Treasury Constant Maturity Rate":("fred","DGS30","rate"),
     "5-Year Breakeven Inflation Rate":("fred", "T5YIE","rate"),
     "10-Year Breakeven Inflation Rate": ("fred","T10YIE","rate"),
-    "GOLD":("fred","GOLDPMGBD228NLBM","raw"),
 }
 
 use_inv_as_feature=True
