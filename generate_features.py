@@ -12,9 +12,12 @@ from collections import OrderedDict
 data_sources={
     "VIX":("yahoo", "^VIX", "rate"),    
     "VIX_raw":("yahoo", "^VIX", "raw"),
-    "SP500":("yahoo", "^GSPC", "raw"),
-    "QQQ":("yahoo","QQQ", "raw"),
-    "Crude Oil Prices: Brent - Europe":("fred","DCOILBRENTEU","raw"),
+    "DJIA":("fred", "DJIA", "raw"),
+    "NASDAQ Composite Index":("fred","NASDAQCOM", "raw"),
+    "US Dollar/USDX":("yahoo","DX-Y.NYB", "raw"),
+    "JPY/USD":("yahoo","JPYUSD=X", "raw"),
+    "EUR/USD":("yahoo","EURUSD=X", "raw"),
+    "Crude Oil Prices: Brent - Europe":("fred","DCOILBRENTEU","rate"),
     "5-Year Treasury Constant Maturity Rate":("fred","DGS5","rate"),
     "10-Year Treasury Constant Maturity Rate":("fred","DGS10","rate"),    
     "30-Year Treasury Constant Maturity Rate":("fred","DGS30","rate"),
@@ -47,14 +50,14 @@ for name in sorted(data_sources.keys()):
     elif kind =="raw":
         for period in (5,20,60):            
             extended_name = f"{name}_std_{period}"
-            features_dataframe[extended_name] = series.rolling(period).std()
+            features_dataframe[extended_name] = series.dropna().rolling(period).std()
             extended_name = f"{name}_skew_{period}"
-            features_dataframe[extended_name] = series.rolling(period).skew()
+            features_dataframe[extended_name] = series.dropna().rolling(period).skew()
             extended_name = f"{name}_kurt_{period}"
-            features_dataframe[extended_name] = series.rolling(period).kurt()
+            features_dataframe[extended_name] = series.dropna().rolling(period).kurt()
     else:
         raise Exception(f"{kind} not supported")
         pass
 #print(features_dataframe)
 features_dataframe = features_dataframe.dropna()
-features_dataframe.to_csv('./data/features_v02.csv')
+features_dataframe.to_csv('./data/features_v03.csv')
