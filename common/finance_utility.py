@@ -9,7 +9,7 @@ import numpy as np
 
 class finance_utility:
     @staticmethod
-    def prices_from_returns(init_price, returns):
+    def prices_from_returns(returns,init_price=1):
         returns = returns.sort_index()
         array = returns.to_numpy()
         price = init_price

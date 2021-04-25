@@ -72,7 +72,7 @@ cov_df = cov_df.sort_index()
 print(f'selected_investments:{selected_investments}, count:{len(selected_investments)}')
 
 for name in selected_investments:
-    prices = finance_utility.prices_from_returns(1, investments_returns[name])
+    prices = finance_utility.prices_from_returns(investments_returns[name])
     # Wiener process
     std = investments_returns[name].std()*math.sqrt(252)
     duration = (investments_returns[name].index[-1] -

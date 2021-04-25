@@ -86,6 +86,8 @@ timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 layer_str = "_".join(map(str,hidden_sizes))
 log_dir = f"./output/train_out_{reward_scale}_{layer_str}_{timestamp}/"
 
+fast_forward_scale = 20
+
 variant = dict(
     algorithm="SAC",
     version="normal",
@@ -94,11 +96,11 @@ variant = dict(
     replay_buffer_size=int(1E6),
     algorithm_kwargs=dict(
         num_epochs=2500,
-        num_eval_steps_per_epoch=1000,
-        num_trains_per_train_loop=10000,
-        num_expl_steps_per_train_loop=1000,
-        min_num_steps_before_training=1000,
-        max_path_length=1000,
+        num_eval_steps_per_epoch=int(1000/fast_forward_scale),
+        num_trains_per_train_loop=int(10000/fast_forward_scale),
+        num_expl_steps_per_train_loop=int(1000/fast_forward_scale),
+        min_num_steps_before_training=int(1000/fast_forward_scale),
+        max_path_length=(1000/fast_forward_scale),
         batch_size=256,
     ),
     reward_scale=reward_scale,

@@ -20,7 +20,7 @@ result_df['std'] = None
 result_df['cagr'] = None
 
 for index in result_df.index:
-    prices = finance_utility.prices_from_returns(1, df[index])
+    prices = finance_utility.prices_from_returns(df[index])
     duration = (df[index].index[-1] -df[index].index[0]).days
     result_df.at[index,'std']=math.sqrt(252)* df[index].std()
     result_df.at[index,'mdd']=finance_utility.drawdown(prices)
