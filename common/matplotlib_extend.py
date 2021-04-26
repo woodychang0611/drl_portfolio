@@ -9,4 +9,15 @@ def set_matplotlib_style():
         if matplotlib.rcParams[name]=='black':
             matplotlib.rcParams[name] ='#B9CAFF'
         if matplotlib.rcParams[name]=='white':
-            matplotlib.rcParams[name] ='#0C0C3A'   
+            matplotlib.rcParams[name] ='#0C0C3A'
+
+def plot_ma(series,lables,title,n):
+    fig, ax = matplotlib.pyplot.subplots()
+    for s,label in zip(series,lables):
+        x=range(len(s))
+        y_std = s.rolling(10).std()   
+        y_mean = s.rolling(10).mean()
+        ax.plot(y_mean,label=label)
+        ax.set_title(title)
+        ax.fill_between(x,y_mean-y_std, y_mean+y_std, alpha=0.2)
+    matplotlib.pyplot.legend()            
