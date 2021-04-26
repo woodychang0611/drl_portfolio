@@ -12,6 +12,7 @@ import pandas as pd
 from itertools import combinations
 from pandas import Timestamp
 from common.finance_utility import finance_utility
+import matplotlib.pyplot as plt
 
 i = "./data/investments_returns_train.csv"
 df =pd.read_csv(i, parse_dates=['Date'], index_col=['Date'])
@@ -19,12 +20,19 @@ result_df = pd.DataFrame(index=df.columns)
 result_df['std'] = None
 result_df['cagr'] = None
 
-for index in result_df.index:
-    prices = finance_utility.prices_from_returns(1, df[index])
-    duration = (df[index].index[-1] -df[index].index[0]).days
-    result_df.at[index,'std']=math.sqrt(252)* df[index].std()
-    result_df.at[index,'mdd']=finance_utility.drawdown(prices)
-    result_df.at[index,'cagr']=finance_utility.cagr(prices[0], prices[-1], duration)
-#finance_utility.plot_drawdown(df['SPY'])    
-print(result_df)
-result_df.to_csv('train.csv')
+def f(x):
+    return 1/x
+def f2(a,x):
+    result = 10/ np.tanh(x/a)
+    return result
+fx_name = r'$f(x)=\frac{1}{x}$'
+
+x=np.arange(0.1,0.9,0.01)
+y=f(x)
+plt.plot(x, y, label=fx_name)
+for i in (0.05,0.2,0.5):
+    y=f2(i,x)
+    plt.plot(x, y, label=f"a: {i}")    
+
+plt.legend(loc='upper left')
+plt.show()
