@@ -111,10 +111,10 @@ variant = dict(
     algorithm_kwargs=dict(
         num_epochs=2500,
         num_eval_steps_per_epoch=int(1000/fast_forward_scale),
-        num_trains_per_train_loop=int(10000/fast_forward_scale),
+        num_trains_per_train_loop=int(3000/fast_forward_scale),
         num_expl_steps_per_train_loop=int(1000/fast_forward_scale),
         min_num_steps_before_training=int(1000/fast_forward_scale),
-        max_path_length=(1000/fast_forward_scale),
+        max_path_length=int(1000/fast_forward_scale),
         batch_size=256,
     ),
     reward_scale=reward_scale,
