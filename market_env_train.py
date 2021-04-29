@@ -42,11 +42,17 @@ def post_process(env, algorithm, epoch, eval_result, output_csv):
 
 
 def train_model(variant):
+
+    state_scale = variant['state_scale']
+    noise = variant['noise']
+
     df_ret_train, df_ret_val, df_feature = load_dataset()
     expl_env = NormalizedBoxEnv(gym.make('MarketEnv-v0', returns=df_ret_train, features=df_feature,
+                                         state_scale=state_scale, noise=noise,
                                          trade_freq='weeks', show_info=False, trade_pecentage=0.2))
 
     eval_env = NormalizedBoxEnv(gym.make('MarketEnv-v0', returns=df_ret_val, features=df_feature,
+                                         state_scale=state_scale,
                                          trade_freq='weeks', show_info=False, trade_pecentage=1.0))
 
     log_dir = variant['log_dir']
@@ -54,14 +60,14 @@ def train_model(variant):
     def post_epoch_func(self, epoch):
         progress_csv = os.path.join(log_dir, 'progress.csv')
         df = pd.read_csv(progress_csv)
-        kpis = ['cagr','dd', 'mdd','wealths']
+        kpis = ['cagr', 'dd', 'mdd', 'wealths']
         srcs = ['evaluation', 'exploration']
         n = 50
         for kpi in kpis:
             series = map(lambda s: df[f'{s}/env_infos/final/{kpi} Mean'], srcs)
             plot_ma(series=series, lables=srcs, title=kpi, n=n)
             plt.savefig(os.path.join(log_dir, f'{kpi}.png'))
-            plt.close() 
+            plt.close()
 
     hidden_sizes = variant['hidden_sizes']
     reward_scale = variant['reward_scale']
@@ -101,14 +107,14 @@ timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 log_dir = f"./output/train_out_{reward_scale}_{timestamp}/"
 
 fast_forward_scale = 1
- variant = dict(
+variant = dict(
     algorithm="SAC",
     version="normal",
     log_dir=log_dir,
     hidden_sizes=[256, 256],
     replay_buffer_size=int(1E6),
-    noise = 0,
-    state_scale = 0.2,
+    noise=0,
+    state_scale=0.2,
     algorithm_kwargs=dict(
         num_epochs=2500,
         num_eval_steps_per_epoch=int(1000/fast_forward_scale),

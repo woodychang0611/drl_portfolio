@@ -60,6 +60,7 @@ expl_env = NormalizedBoxEnv(gym.make('MarketEnv-v0', returns=df_ret_train, featu
 
 eval_env = NormalizedBoxEnv(gym.make('MarketEnv-v0', returns=df_ret_val, features=df_feature,
                                     state_scale=0.1,noise =0,
+                                    
                                     trade_freq='weeks', show_info=False, trade_pecentage=1.0))
 
 #Load model from pkl file
