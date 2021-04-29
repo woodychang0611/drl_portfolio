@@ -101,13 +101,14 @@ timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 log_dir = f"./output/train_out_{reward_scale}_{timestamp}/"
 
 fast_forward_scale = 1
-
-variant = dict(
+ variant = dict(
     algorithm="SAC",
     version="normal",
     log_dir=log_dir,
     hidden_sizes=[256, 256],
     replay_buffer_size=int(1E6),
+    noise = 0,
+    state_scale = 0.2,
     algorithm_kwargs=dict(
         num_epochs=2500,
         num_eval_steps_per_epoch=int(1000/fast_forward_scale),

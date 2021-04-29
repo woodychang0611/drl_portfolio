@@ -39,6 +39,8 @@ class MarketEnv(gym.Env):
     def __init__(self, returns: DataFrame, features: DataFrame, show_info=False, trade_freq='days',
                  action_to_weights_func=proration_weights,
                  reward_func=simple_return_reward,
+                 noise=0,
+                 state_scale=1,
                  trade_pecentage=0.1):
         self._load_data(returns=returns, features=features, show_info=show_info, trade_freq=trade_freq)
         self._init_action_space()
@@ -47,6 +49,8 @@ class MarketEnv(gym.Env):
         self.start_index, self.current_index, self.end_index = 0, 0, 0
         self.action_to_weights_func = action_to_weights_func
         self.reward_func = reward_func
+        self.noise=noise
+        self.state_scale=state_scale
         self.seed()
         self.reset()
 
@@ -71,10 +75,9 @@ class MarketEnv(gym.Env):
         features = resample_backfill(features, resample_rules[trade_freq]).dropna()
         # Scale features to -1 and 1
         for col in features.columns:
-            max_value = features[col].max()
-            min_value = features[col].min()
+            mean = features[col].mean()
             std  = features[col].std() 
-            features[col] = (features[col]-min_value)/std
+            features[col] = (features[col]-mean)/std
         # resample based on trade frequency e.g. weeks or months
         returns = resample_relative_changes(returns, resample_rules[trade_freq])
         # Only keep feature data within peroid of investments returns
@@ -177,8 +180,8 @@ class MarketEnv(gym.Env):
         return self._get_state()
 
     def _get_state(self):
-        noise = np.random.rand(self.observation_space.shape[0])*0.3-0.1
-        state = self.features.iloc[self.current_index].to_numpy()
+        noise = np.random.normal(0,self.noise,self.observation_space.shape)
+        state = self.features.iloc[self.current_index].to_numpy()*self.state_scale
         state = state + noise       
         np.clip(state, -1, 1, out=state)
         if (state.shape != self.observation_space.shape):

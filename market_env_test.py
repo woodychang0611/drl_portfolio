@@ -43,8 +43,10 @@ def eval_policy(env, policy, df=None):
     while not done:
         action = policy.get_actions(state)
         state, reward, done, info = env.step(action)
-        print(action)
-        print(reward)
+
+        print(f'state: {state}')    
+        print(f'action: {action}')
+        print(f'reward: {reward}')
         print(info)
         if (df is not None):
             df = df.append(info, ignore_index=True)
@@ -53,10 +55,12 @@ def eval_policy(env, policy, df=None):
     
 df_ret_train, df_ret_val, df_feature = load_dataset()
 expl_env = NormalizedBoxEnv(gym.make('MarketEnv-v0', returns=df_ret_train, features=df_feature,
+                                    state_scale=0.1,noise =0,
                                     trade_freq='weeks', show_info=False, trade_pecentage=1.0))
 
 eval_env = NormalizedBoxEnv(gym.make('MarketEnv-v0', returns=df_ret_val, features=df_feature,
-                                trade_freq='weeks', show_info=False, trade_pecentage=1.0))
+                                    state_scale=0.1,noise =0,
+                                    trade_freq='weeks', show_info=False, trade_pecentage=1.0))
 
 #Load model from pkl file
 #file = r"C:\Users\Woody\Documents\git repository\nccu-thesis\code\output\saved\itr_380.pkl"
