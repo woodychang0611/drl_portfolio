@@ -25,7 +25,7 @@ data_sources={
     "10-Year Breakeven Inflation Rate": ("fred","T10YIE","rate"),
 }
 
-use_inv_as_feature=False
+use_inv_as_feature=True
 if(use_inv_as_feature):
     current_folder = os.path.dirname(__file__)
     inv = pd.read_csv( os.path.join(current_folder, './data/selected_investments.csv'), index_col=0)

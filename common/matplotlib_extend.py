@@ -15,8 +15,8 @@ def plot_ma(series,lables,title,n):
     fig, ax = matplotlib.pyplot.subplots()
     for s,label in zip(series,lables):
         x=range(len(s))
-        y_std = s.rolling(10).std()   
-        y_mean = s.rolling(10).mean()
+        y_std = s.rolling(n).std()   
+        y_mean = s.rolling(n).mean()
         ax.plot(y_mean,label=label)
         ax.set_title(title)
         ax.fill_between(x,y_mean-y_std, y_mean+y_std, alpha=0.2)

@@ -16,7 +16,14 @@ def proration_weights(action):
 
 
 def simple_return_reward(env):
-    reward = env.profit
+    r = env.profit
+    a = env.mean
+    b = env.mean_square
+    if (b-a**2) ==0:
+        reward =0
+    else:
+        reward = r*((b-a*r) / ((b - a **2 )** 3/2))
+    reward = r
     return reward
 
 
@@ -64,7 +71,10 @@ class MarketEnv(gym.Env):
         features = resample_backfill(features, resample_rules[trade_freq]).dropna()
         # Scale features to -1 and 1
         for col in features.columns:
-            features[col] = features[col]/max(abs(features[col].max()), abs(features[col].min()))
+            max_value = features[col].max()
+            min_value = features[col].min()
+            std  = features[col].std() 
+            features[col] = (features[col]-min_value)/std
         # resample based on trade frequency e.g. weeks or months
         returns = resample_relative_changes(returns, resample_rules[trade_freq])
         # Only keep feature data within peroid of investments returns
@@ -167,7 +177,10 @@ class MarketEnv(gym.Env):
         return self._get_state()
 
     def _get_state(self):
+        noise = np.random.rand(self.observation_space.shape[0])*0.3-0.1
         state = self.features.iloc[self.current_index].to_numpy()
+        state = state + noise       
+        np.clip(state, -1, 1, out=state)
         if (state.shape != self.observation_space.shape):
             raise Exception('Shape of state {state.shape} is incorrect should be {self.observation_space.shape}')
         return state
