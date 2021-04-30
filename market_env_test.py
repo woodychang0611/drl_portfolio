@@ -17,6 +17,9 @@ from rlkit.torch.torch_rl_algorithm import TorchBatchRLAlgorithm
 from common.finance_utility import finance_utility
 import torch
 
+def get_unwrapped_env(env):
+    return env._wrapped_env.unwrapped
+
 def load_dataset():
     current_folder = os.path.dirname(__file__)
     ret_csv_train = os.path.join(current_folder, './data/investments_returns_train.csv')
@@ -40,26 +43,32 @@ def fix_action_policy(action):
 def eval_policy(env, policy, df=None):
     done = False
     state = env.reset()
+    rewards =[]
     while not done:
         action = policy.get_actions(state)
         state, reward, done, info = env.step(action)
 
-        print(f'state: {state}')    
-        print(f'action: {action}')
-        print(f'reward: {reward}')
+        #print(f'state: {state}')    
+        #print(f'action: {action}')
+        #print(f'reward: {reward}')
+        rewards.append(reward)
         print(info)
         if (df is not None):
             df = df.append(info, ignore_index=True)
+    rewards = np.array(rewards)
+    print(f'mean:{np.mean(rewards)}')
+    print(f'std:{np.std(rewards)}')
+    print(f'ratio:{np.mean(rewards)/np.std(rewards)}')
     if (df is not None):
         return df
     
 df_ret_train, df_ret_val, df_feature = load_dataset()
 expl_env = NormalizedBoxEnv(gym.make('MarketEnv-v0', returns=df_ret_train, features=df_feature,
-                                    state_scale=0.1,noise =0,
+                                    state_scale=0.2,noise =0,
                                     trade_freq='weeks', show_info=False, trade_pecentage=1.0))
 
 eval_env = NormalizedBoxEnv(gym.make('MarketEnv-v0', returns=df_ret_val, features=df_feature,
-                                    state_scale=0.1,noise =0,
+                                    state_scale=0.2,noise =0,
                                     
                                     trade_freq='weeks', show_info=False, trade_pecentage=1.0))
 
@@ -70,8 +79,12 @@ trainer = get_sac_model(env=eval_env)
 
 
 env = expl_env
-
+unwrapped_env = get_unwrapped_env(env)
 returns = env._wrapped_env.unwrapped.returns
+features = env._wrapped_env.unwrapped.features
+features.to_csv('features.csv')
+exit()
+
 prices = finance_utility.prices_from_returns(returns['LQD'])
 print(finance_utility.drawdown(prices))
 policy = trainer.policy
@@ -80,5 +93,4 @@ action[5]=1
 policy = fix_action_policy(action)
 df = pd.DataFrame()
 df = eval_policy(env,policy,df)
-print(df)
 df.to_csv('test.csv')

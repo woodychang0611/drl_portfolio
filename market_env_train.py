@@ -10,6 +10,7 @@ import os
 import common
 import matplotlib.pyplot as plt
 from common.trainer import get_sac_model
+from common.market_env import  simple_return_reward, sharpe_ratio_reward
 from common.matplotlib_extend import plot_ma
 import rlkit.torch.pytorch_util as ptu
 import numpy as np
@@ -45,14 +46,15 @@ def train_model(variant):
 
     state_scale = variant['state_scale']
     noise = variant['noise']
+    reward_func = variant['reward_func']
 
     df_ret_train, df_ret_val, df_feature = load_dataset()
     expl_env = NormalizedBoxEnv(gym.make('MarketEnv-v0', returns=df_ret_train, features=df_feature,
-                                         state_scale=state_scale, noise=noise,
+                                         state_scale=state_scale, noise=noise,reward_func=reward_func,
                                          trade_freq='weeks', show_info=False, trade_pecentage=0.2))
 
     eval_env = NormalizedBoxEnv(gym.make('MarketEnv-v0', returns=df_ret_val, features=df_feature,
-                                         state_scale=state_scale,
+                                         state_scale=state_scale,reward_func=reward_func,
                                          trade_freq='weeks', show_info=False, trade_pecentage=1.0))
 
     log_dir = variant['log_dir']
@@ -102,7 +104,7 @@ def train_model(variant):
 
 
 ptu.set_gpu_mode(True)
-reward_scale = 3000
+reward_scale = 30
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 log_dir = f"./output/train_out_{reward_scale}_{timestamp}/"
 
@@ -114,7 +116,8 @@ variant = dict(
     hidden_sizes=[256, 256],
     replay_buffer_size=int(1E6),
     noise=0,
-    state_scale=0.2,
+    state_scale=0.5,
+    reward_func = simple_return_reward,
     algorithm_kwargs=dict(
         num_epochs=2500,
         num_eval_steps_per_epoch=int(1000/fast_forward_scale),

@@ -40,7 +40,7 @@ def resample_relative_changes(df, rule):
 class MarketEnv(gym.Env):
     def __init__(self, returns: DataFrame, features: DataFrame, show_info=False, trade_freq='days',
                  action_to_weights_func=proration_weights,
-                 reward_func=sharpe_ratio_reward,
+                 reward_func=simple_return_reward,
                  noise=0,
                  state_scale=1,
                  trade_pecentage=0.1):
