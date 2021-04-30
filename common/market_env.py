@@ -16,16 +16,18 @@ def proration_weights(action):
 
 
 def simple_return_reward(env):
+    reward = env.profit
+    return reward
+
+def sharpe_ratio_reward(env):
     r = env.profit
     a = env.mean
     b = env.mean_square
     if (b-a**2) ==0:
         reward =0
     else:
-        reward = r*((b-a*r) / ((b - a **2 )** 3/2))
-    reward = r
+        reward = r*(b-a*r) / ((b - a **2 )** 1.5)
     return reward
-
 
 def resample_backfill(df, rule):
     return df.apply(lambda x: 1+x).resample(rule).backfill()
@@ -38,7 +40,7 @@ def resample_relative_changes(df, rule):
 class MarketEnv(gym.Env):
     def __init__(self, returns: DataFrame, features: DataFrame, show_info=False, trade_freq='days',
                  action_to_weights_func=proration_weights,
-                 reward_func=simple_return_reward,
+                 reward_func=sharpe_ratio_reward,
                  noise=0,
                  state_scale=1,
                  trade_pecentage=0.1):
@@ -149,7 +151,7 @@ class MarketEnv(gym.Env):
 
         # todo define new reward function
         reward = self.reward_func(self)
-
+        self.reward = reward
         info = self._get_info()
         state = self._get_state()
         return state, reward, done, info
@@ -211,6 +213,7 @@ class MarketEnv(gym.Env):
             'mean_square': self.mean_square,
             'mdd': self.max_drawdown,
             'profit': self.profit,
+            'reward':self.reward,
             'dd': self.drawdown,
             'episode': self.episode,
         }
