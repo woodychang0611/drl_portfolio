@@ -11,8 +11,8 @@ from collections import OrderedDict
 
 data_sources={
     "VIX":("yahoo", "^VIX", "raw"),
-    "Dow Jones Industrial Average":("yahoo", "^DJI", "raw"),
-    "NASDAQ Composite Index":("fred","NASDAQCOM", "raw"),
+   # "Dow Jones Industrial Average":("yahoo", "^DJI", "raw"),
+   # "NASDAQ Composite Index":("fred","NASDAQCOM", "raw"),
     "US Dollar/USDX":("yahoo","DX-Y.NYB", "raw"),
     "Crude Oil Prices: Brent - Europe":("fred","DCOILBRENTEU","raw"),
     "GOLD":("fred","GOLDPMGBD228NLBM","raw"),
@@ -23,7 +23,7 @@ data_sources={
     "10-Year Breakeven Inflation Rate": ("fred","T10YIE","rate"),
 }
 
-use_inv_as_feature=True
+use_inv_as_feature=False
 if(use_inv_as_feature):
     current_folder = os.path.dirname(__file__)
     inv = pd.read_csv( os.path.join(current_folder, './data/selected_investments.csv'), index_col=0)
