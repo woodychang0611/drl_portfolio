@@ -127,7 +127,7 @@ variant = dict(
         state_scale=0.3,
         reward_func=simple_return_reward,
         trade_freq='weeks',
-        trade_pecentage=0.2
+        trade_pecentage=1
     ),
     algorithm_kwargs=dict(
         num_epochs=2500,

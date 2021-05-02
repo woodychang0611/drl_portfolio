@@ -19,14 +19,18 @@ import torch
 import json
 from common.market_env import simple_return_reward, sharpe_ratio_reward
 
+def get_unwrapped_env(env):
+    return env._wrapped_env.unwrapped
+
 def eval_policy(env, policy, df=None):
     done = False
     state = env.reset()
     rewards =[]
+    weights=[]
     while not done:
         action = policy.get_actions(state)
         state, reward, done, info = env.step(action)
-
+        weights.append((get_unwrapped_env(env)).weights)
         #print(f'state: {state}')    
         #print(f'action: {action}')
         #print(f'reward: {reward}')
@@ -38,6 +42,8 @@ def eval_policy(env, policy, df=None):
     print(f'mean:{np.mean(rewards)}')
     print(f'std:{np.std(rewards)}')
     print(f'ratio:{np.mean(rewards)/np.std(rewards)}')
+    weights_df = pd.DataFrame(weights)
+    weights_df.to_csv('action')
     if (df is not None):
         return df
 
@@ -48,11 +54,10 @@ def fix_action_policy(action):
     return dummy_policy()
 
 
-def get_unwrapped_env(env):
-    return env._wrapped_env.unwrapped
 
 
-src = r'C:\Users\Woody\Documents\git repository\nccu-thesis\code\output\train_out_20210502_220229'
+
+src = r'C:\Users\Woody\Documents\git repository\nccu-thesis\code\output\train_out_20210502_230851'
 with open(os.path.join(src,'variant.json')) as json_file:
     variant=json.load(json_file)
 
@@ -82,35 +87,18 @@ file =os.path.join(src,'params.pkl')
 v = torch.load(file)
 print(type(trainer.policy))
 print(v['evaluation/policy'])
+ptu.set_gpu_mode(True)
+trainer.policy =  torch.load(file)['evaluation/policy']
+policy = MakeDeterministic(trainer.policy)
 
-trainer.policy.parameters =  torch.load(file)['evaluation/policy']
-policy = trainer.policy
-df = pd.DataFrame()
-df = eval_policy(env,policy,df)
-exit()
+#action = np.full(10,-1)
+#action[5]=1
+#policy = fix_action_policy(action)
 
-
-
-
-
-
-trainer = get_sac_model(env=eval_env)
-#trainer.policy.parameters =  torch.load(file)['trainer/policy']
-
-
-env = expl_env
-unwrapped_env = get_unwrapped_env(env)
-returns = env._wrapped_env.unwrapped.returns
-features = env._wrapped_env.unwrapped.features
-#features.to_csv('features.csv')
-#exit()
-
-prices = finance_utility.prices_from_returns(returns['LQD'])
-print(finance_utility.drawdown(prices))
-policy = trainer.policy
-action = np.full(10,-1)
-action[5]=1
-policy = fix_action_policy(action)
 df = pd.DataFrame()
 df = eval_policy(env,policy,df)
 df.to_csv('test.csv')
+
+
+
+
