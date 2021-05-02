@@ -26,7 +26,12 @@ def sharpe_ratio_reward(env):
     if (b-a**2) ==0:
         reward =0
     else:
-        reward = r*(b-a*r) / ((b - a **2 )** 1.5)
+        sharpe_old = a/((b-a*2)*0.5)
+        eta = 0.06
+        a_new = a *(1-eta)+eta*r
+        b_new = b*(1-eta)+eta*r*r
+        sharpe_new = a_new/((b_new-a_new*2)*0.5)
+        reward = sharpe_new-sharpe_old
     return reward
 
 def resample_backfill(df, rule):
@@ -142,6 +147,9 @@ class MarketEnv(gym.Env):
         # w_n = w_n-1 * (1+r)
         self.wealth = np.dot(self.investments, (1 + inv_return))
         self.profit = (self.wealth - previous_wealth)/previous_wealth
+        # todo define new reward function
+        reward = self.reward_func(self)
+        self.reward = reward
 
         self.max_weath = max(self.wealth, self.max_weath)
         self.drawdown = max(0, (self.max_weath - self.wealth) / self.max_weath)
@@ -149,9 +157,7 @@ class MarketEnv(gym.Env):
         self.mean = (self.mean * (self.episode-1) + self.profit)/self.episode
         self.mean_square = (self.mean_square * (self.episode-1) + self.profit ** 2)/self.episode
 
-        # todo define new reward function
-        reward = self.reward_func(self)
-        self.reward = reward
+
         info = self._get_info()
         state = self._get_state()
         return state, reward, done, info
