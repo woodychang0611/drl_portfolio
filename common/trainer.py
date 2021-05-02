@@ -7,7 +7,7 @@ from rlkit.torch.networks import ConcatMlp, TanhMlpPolicy
 import copy
 
 
-def get_sac_model(env, hidden_sizes=[256, 256], reward_scale=1):
+def get_sac_trainer(env, hidden_sizes=[256, 256], reward_scale=1):
     obs_dim = env.observation_space.low.size
     action_dim = env.action_space.low.size
     qf1 = ConcatMlp(
@@ -54,7 +54,7 @@ def get_sac_model(env, hidden_sizes=[256, 256], reward_scale=1):
     return trainer
 
 
-def get_ddpg_model(env, hidden_sizes=[256, 256]):
+def get_ddpg_trainer(env, hidden_sizes=[256, 256]):
     obs_dim = env.observation_space.low.size
     action_dim = env.action_space.low.size
     qf = ConcatMlp(
@@ -84,7 +84,7 @@ def get_ddpg_model(env, hidden_sizes=[256, 256]):
     return trainer
 
 
-def get_td3_model(env, hidden_sizes=[256, 256],**kwargs):
+def get_td3_trainer(env, hidden_sizes=[256, 256],**kwargs):
     obs_dim = env.observation_space.low.size
     action_dim = env.action_space.low.size
     qf1 = ConcatMlp(
@@ -130,12 +130,12 @@ def get_td3_model(env, hidden_sizes=[256, 256],**kwargs):
     return trainer
 
 
-def get_model(env,algorithm,reward_scale,**kwargs):
+def get_trainer(env,algorithm,reward_scale,**kwargs):
     if(algorithm =='SAC'):
-        trainer = get_sac_model(env=env,reward_scale=reward_scale,**kwargs)
+        trainer = get_sac_trainer(env=env,reward_scale=reward_scale,**kwargs)
     elif (algorithm=='DDPG'):
-        trainer = get_ddpg_model(env=env, **kwargs)
+        trainer = get_ddpg_trainer(env=env, **kwargs)
     elif (algorithm=='TD3'):
-        trainer = get_ddpg_model(env=env, **kwargs)
+        trainer = get_ddpg_trainer(env=env, **kwargs)
     return trainer
     

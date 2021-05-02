@@ -9,7 +9,7 @@ from pandas import Timestamp
 import os
 import common
 import matplotlib.pyplot as plt
-from common.trainer import get_model
+from common.trainer import get_trainer
 from common.market_env import simple_return_reward, sharpe_ratio_reward
 from common.matplotlib_extend import plot_ma
 import rlkit.torch.pytorch_util as ptu
@@ -71,7 +71,7 @@ def train_model(variant):
             plt.savefig(os.path.join(log_dir, f'{kpi}.png'))
             plt.close()
 
-    trainer = get_model(env=eval_env, **trainer_kwargs)
+    trainer = get_trainer(env=eval_env, **trainer_kwargs)
     policy = trainer.policy
     eval_policy = MakeDeterministic(policy)
     eval_policy = policy
@@ -111,9 +111,9 @@ variant = dict(
     log_dir=log_dir,
     replay_buffer_size=int(1E6),
     trainer_kwargs=dict(
-        algorithm="TD3",
+        algorithm="SAC",
         hidden_sizes=[256, 256],
-        reward_scale=3000,  # Only used by SAC
+        reward_scale=1000,  # Only used by SAC
     ),
     expl_env_kwargs=dict(
         noise=0.3,

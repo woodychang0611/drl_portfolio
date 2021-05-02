@@ -8,7 +8,7 @@ import pandas as pd
 from pandas import Timestamp
 import os
 import common
-from common.trainer import get_sac_model
+from common.trainer import get_trainer
 from common.market_env import MarketEnv
 import rlkit.torch.pytorch_util as ptu
 import numpy as np
@@ -16,29 +16,8 @@ from datetime import datetime
 from rlkit.torch.torch_rl_algorithm import TorchBatchRLAlgorithm
 from common.finance_utility import finance_utility
 import torch
-
-def get_unwrapped_env(env):
-    return env._wrapped_env.unwrapped
-
-def load_dataset():
-    current_folder = os.path.dirname(__file__)
-    ret_csv_train = os.path.join(current_folder, './data/investments_returns_train.csv')
-    ret_csv_val = os.path.join(current_folder, './data/investments_returns_validation.csv')
-    features_csv = os.path.join(current_folder, './data/features_v03.csv')
-    df_ret_train = pd.read_csv(ret_csv_train, parse_dates=['Date'], index_col=['Date'])
-    df_ret_val = pd.read_csv(ret_csv_val, parse_dates=['Date'], index_col=['Date'])
-    df_feature = pd.read_csv(features_csv, parse_dates=['Date'], index_col=['Date'])
-    return df_ret_train, df_ret_val, df_feature
-
-
-gym.envs.register(id='MarketEnv-v0', entry_point='common.market_env:MarketEnv', max_episode_steps=1000)
-
-def fix_action_policy(action):
-    class dummy_policy(object):
-        def __init__(self):
-            self.get_actions  = lambda env: action
-    return dummy_policy()
-
+import json
+from common.market_env import simple_return_reward, sharpe_ratio_reward
 
 def eval_policy(env, policy, df=None):
     done = False
@@ -61,19 +40,60 @@ def eval_policy(env, policy, df=None):
     print(f'ratio:{np.mean(rewards)/np.std(rewards)}')
     if (df is not None):
         return df
-    
-df_ret_train, df_ret_val, df_feature = load_dataset()
+
+def fix_action_policy(action):
+    class dummy_policy(object):
+        def __init__(self):
+            self.get_actions  = lambda env: action
+    return dummy_policy()
+
+
+def get_unwrapped_env(env):
+    return env._wrapped_env.unwrapped
+
+
+src = r'C:\Users\Woody\Documents\git repository\nccu-thesis\code\output\train_out_20210502_220229'
+with open(os.path.join(src,'variant.json')) as json_file:
+    variant=json.load(json_file)
+
+expl_env_kwargs = variant['expl_env_kwargs']
+eval_env_kwargs = variant['eval_env_kwargs']    
+trainer_kwargs = variant['trainer_kwargs']
+df_ret_train = pd.read_csv(os.path.join(src,'df_ret_train.csv'), parse_dates=['Date'], index_col=['Date'])
+df_ret_val = pd.read_csv(os.path.join(src,'df_ret_val.csv'), parse_dates=['Date'], index_col=['Date'])
+df_feature = pd.read_csv(os.path.join(src,'df_feature.csv'), parse_dates=['Date'], index_col=['Date'])
+gym.envs.register(id='MarketEnv-v0', entry_point='common.market_env:MarketEnv', max_episode_steps=1000)
+
+
+#todo should parse it from json file
+reward_func = simple_return_reward
+expl_env_kwargs['reward_func'] = simple_return_reward
+eval_env_kwargs['reward_func'] = simple_return_reward
+
 expl_env = NormalizedBoxEnv(gym.make('MarketEnv-v0', returns=df_ret_train, features=df_feature,
-                                    state_scale=0.2,noise =0,
-                                    trade_freq='weeks', show_info=False, trade_pecentage=1.0))
+                                        **expl_env_kwargs))
 
 eval_env = NormalizedBoxEnv(gym.make('MarketEnv-v0', returns=df_ret_val, features=df_feature,
-                                    state_scale=0.2,noise =0,
-                                    
-                                    trade_freq='weeks', show_info=False, trade_pecentage=1.0))
+                                        **eval_env_kwargs))
 
-#Load model from pkl file
-#file = r"C:\Users\Woody\Documents\git repository\nccu-thesis\code\output\saved\itr_380.pkl"
+env = eval_env
+trainer = get_trainer(env=env,**trainer_kwargs)
+file =os.path.join(src,'params.pkl')
+v = torch.load(file)
+print(type(trainer.policy))
+print(v['evaluation/policy'])
+
+trainer.policy.parameters =  torch.load(file)['evaluation/policy']
+policy = trainer.policy
+df = pd.DataFrame()
+df = eval_policy(env,policy,df)
+exit()
+
+
+
+
+
+
 trainer = get_sac_model(env=eval_env)
 #trainer.policy.parameters =  torch.load(file)['trainer/policy']
 
@@ -82,8 +102,8 @@ env = expl_env
 unwrapped_env = get_unwrapped_env(env)
 returns = env._wrapped_env.unwrapped.returns
 features = env._wrapped_env.unwrapped.features
-features.to_csv('features.csv')
-exit()
+#features.to_csv('features.csv')
+#exit()
 
 prices = finance_utility.prices_from_returns(returns['LQD'])
 print(finance_utility.drawdown(prices))
