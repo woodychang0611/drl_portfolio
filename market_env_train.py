@@ -9,8 +9,8 @@ from pandas import Timestamp
 import os
 import common
 import matplotlib.pyplot as plt
-from common.trainer import get_sac_model
-from common.market_env import  simple_return_reward, sharpe_ratio_reward
+from common.trainer import get_model
+from common.market_env import simple_return_reward, sharpe_ratio_reward
 from common.matplotlib_extend import plot_ma
 import rlkit.torch.pytorch_util as ptu
 import numpy as np
@@ -44,20 +44,20 @@ def post_process(env, algorithm, epoch, eval_result, output_csv):
 
 def train_model(variant):
 
-    state_scale = variant['state_scale']
-    noise = variant['noise']
-    reward_func = variant['reward_func']
+    expl_env_kwargs = variant['expl_env_kwargs']
+    eval_env_kwargs = variant['eval_env_kwargs']
+    trainer_kwargs = variant['trainer_kwargs']
+    log_dir = variant['log_dir']
 
     df_ret_train, df_ret_val, df_feature = load_dataset()
+    df_ret_train.to_csv(os.path.join(log_dir, 'df_ret_train.csv'))
+    df_ret_val.to_csv(os.path.join(log_dir, 'df_ret_val.csv'))
+    df_feature.to_csv(os.path.join(log_dir, 'df_feature.csv'))
     expl_env = NormalizedBoxEnv(gym.make('MarketEnv-v0', returns=df_ret_train, features=df_feature,
-                                         state_scale=state_scale, noise=noise,reward_func=reward_func,
-                                         trade_freq='weeks', show_info=False, trade_pecentage=0.2))
+                                         **expl_env_kwargs))
 
     eval_env = NormalizedBoxEnv(gym.make('MarketEnv-v0', returns=df_ret_val, features=df_feature,
-                                         state_scale=state_scale,reward_func=reward_func,
-                                         trade_freq='weeks', show_info=False, trade_pecentage=1.0))
-
-    log_dir = variant['log_dir']
+                                         **eval_env_kwargs))
 
     def post_epoch_func(self, epoch):
         progress_csv = os.path.join(log_dir, 'progress.csv')
@@ -71,11 +71,9 @@ def train_model(variant):
             plt.savefig(os.path.join(log_dir, f'{kpi}.png'))
             plt.close()
 
-    hidden_sizes = variant['hidden_sizes']
-    reward_scale = variant['reward_scale']
-    trainer = get_sac_model(env=eval_env, hidden_sizes=hidden_sizes, reward_scale=reward_scale)
+    trainer = get_model(env=eval_env, **trainer_kwargs)
     policy = trainer.policy
-    #eval_policy = MakeDeterministic(policy)
+    eval_policy = MakeDeterministic(policy)
     eval_policy = policy
     eval_path_collector = MdpPathCollector(
         eval_env,
@@ -104,20 +102,33 @@ def train_model(variant):
 
 
 ptu.set_gpu_mode(True)
-reward_scale = 30
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-log_dir = f"./output/train_out_{reward_scale}_{timestamp}/"
+log_dir = f"./output/train_out_{timestamp}/"
 
 fast_forward_scale = 1
 variant = dict(
-    algorithm="SAC",
     version="normal",
     log_dir=log_dir,
-    hidden_sizes=[256, 256],
     replay_buffer_size=int(1E6),
-    noise=0,
-    state_scale=0.5,
-    reward_func = simple_return_reward,
+    trainer_kwargs=dict(
+        algorithm="TD3",
+        hidden_sizes=[256, 256],
+        reward_scale=3000,  # Only used by SAC
+    ),
+    expl_env_kwargs=dict(
+        noise=0.3,
+        state_scale=0.3,
+        reward_func=simple_return_reward,
+        trade_freq='weeks',
+        trade_pecentage=0.2
+    ),
+    eval_env_kwargs=dict(
+        noise=0,
+        state_scale=0.3,
+        reward_func=simple_return_reward,
+        trade_freq='weeks',
+        trade_pecentage=0.2
+    ),
     algorithm_kwargs=dict(
         num_epochs=2500,
         num_eval_steps_per_epoch=int(1000/fast_forward_scale),
@@ -126,8 +137,7 @@ variant = dict(
         min_num_steps_before_training=int(1000/fast_forward_scale),
         max_path_length=int(1000/fast_forward_scale),
         batch_size=256,
-    ),
-    reward_scale=reward_scale,
+    )
 )
 
 setup_logger('name-of-experiment', variant=variant,
