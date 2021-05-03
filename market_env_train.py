@@ -111,12 +111,12 @@ variant = dict(
     log_dir=log_dir,
     replay_buffer_size=int(1E6),
     trainer_kwargs=dict(
-        algorithm="TD3", #Can be SAC, TD3, or DDPG
+        algorithm="SAC", #Can be SAC, TD3, or DDPG
         hidden_sizes=[256, 256],
         reward_scale=1000,  # Only used by SAC
     ),
     expl_env_kwargs=dict(
-        noise=0,
+        noise=0.3,
         state_scale=0.3,
         reward_func=simple_return_reward,
         trade_freq='weeks',
