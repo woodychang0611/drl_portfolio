@@ -98,6 +98,7 @@ def train_model(variant):
 ptu.set_gpu_mode(True)
 
 fast_forward_scale = 1
+
 variant = dict(
     version="normal",
     replay_buffer_size=int(1E6),
@@ -109,14 +110,23 @@ variant = dict(
     expl_env_kwargs=dict(
         noise=0.3,
         state_scale=0.3,
-        reward_func=risk_adjusted_reward(threshold=0.07,drop_only=False),
+        reward_func=risk_adjusted_reward,
+        reward_func_kwargs=dict(
+            threshold=0.07,
+            drop_only=False
+        )
+        ,
         trade_freq='weeks',
         trade_pecentage=0.2
     ),
     eval_env_kwargs=dict(
         noise=0,
         state_scale=0.3,
-        reward_func=risk_adjusted_reward(threshold=0.07,drop_only=False),
+        reward_func=risk_adjusted_reward,
+        reward_func_kwargs=dict(
+            threshold=0.07,
+            drop_only=False
+        ),
         trade_freq='weeks',
         trade_pecentage=1
     ),

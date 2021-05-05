@@ -36,17 +36,15 @@ def sharpe_ratio_reward(env):
     return reward
 
 
-def risk_adjusted_reward(threshold: float=float("inf"), drop_only: bool = False):
-    def reward_func(env):
-        reward = env.profit
-        if (abs(reward) < threshold):
-            return reward
-        if (reward >= 0 and drop_only):
-            return reward
-        reward = reward - 2 * (abs(reward) - threshold)
-
+def risk_adjusted_reward(env, threshold: float=float("inf"), drop_only: bool = False):
+    reward = env.profit
+    if (abs(reward) < threshold):
         return reward
-    return reward_func
+    if (reward >= 0 and drop_only):
+        return reward
+    reward = reward - 2 * (abs(reward) - threshold)
+
+    return reward
 
 
 def resample_backfill(df, rule):
@@ -61,6 +59,7 @@ class MarketEnv(gym.Env):
     def __init__(self, returns: DataFrame, features: DataFrame, show_info=False, trade_freq='days',
                  action_to_weights_func=proration_weights,
                  reward_func=simple_return_reward,
+                 reward_func_kwargs=dict(),
                  noise=0,
                  state_scale=1,
                  trade_pecentage=0.1):
@@ -71,6 +70,7 @@ class MarketEnv(gym.Env):
         self.start_index, self.current_index, self.end_index = 0, 0, 0
         self.action_to_weights_func = action_to_weights_func
         self.reward_func = reward_func
+        self.reward_func_kwargs = reward_func_kwargs
         self.noise = noise
         self.state_scale = state_scale
         self.seed()
@@ -163,7 +163,7 @@ class MarketEnv(gym.Env):
         self.wealth = np.dot(self.investments, (1 + inv_return))
         self.profit = (self.wealth - previous_wealth)/previous_wealth
         # todo define new reward function
-        reward = self.reward_func(self)
+        reward = self.reward_func(self,**self.reward_func_kwargs)
         self.reward = reward
 
         self.max_weath = max(self.wealth, self.max_weath)
