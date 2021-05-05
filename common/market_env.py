@@ -19,20 +19,35 @@ def simple_return_reward(env):
     reward = env.profit
     return reward
 
+
 def sharpe_ratio_reward(env):
     r = env.profit
     a = env.mean
     b = env.mean_square
-    if (b-a**2) ==0:
-        reward =0
+    if (b-a**2) == 0:
+        reward = 0
     else:
         sharpe_old = a/((b-a*2)*0.5)
         eta = 0.06
-        a_new = a *(1-eta)+eta*r
+        a_new = a * (1-eta)+eta*r
         b_new = b*(1-eta)+eta*r*r
         sharpe_new = a_new/((b_new-a_new*2)*0.5)
         reward = sharpe_new-sharpe_old
     return reward
+
+
+def risk_adjusted_reward(threshold: float=float("inf"), drop_only: bool = False):
+    def reward_func(env):
+        reward = env.profit
+        if (abs(reward) < threshold):
+            return reward
+        if (reward >= 0 and drop_only):
+            return reward
+        reward = reward - 2 * (abs(reward) - threshold)
+
+        return reward
+    return reward_func
+
 
 def resample_backfill(df, rule):
     return df.apply(lambda x: 1+x).resample(rule).backfill()
@@ -56,8 +71,8 @@ class MarketEnv(gym.Env):
         self.start_index, self.current_index, self.end_index = 0, 0, 0
         self.action_to_weights_func = action_to_weights_func
         self.reward_func = reward_func
-        self.noise=noise
-        self.state_scale=state_scale
+        self.noise = noise
+        self.state_scale = state_scale
         self.seed()
         self.reset()
 
@@ -83,7 +98,7 @@ class MarketEnv(gym.Env):
         # Scale features to -1 and 1
         for col in features.columns:
             mean = features[col].mean()
-            std  = features[col].std() 
+            std = features[col].std()
             features[col] = (features[col]-mean)/std
         # resample based on trade frequency e.g. weeks or months
         returns = resample_relative_changes(returns, resample_rules[trade_freq])
@@ -157,7 +172,6 @@ class MarketEnv(gym.Env):
         self.mean = (self.mean * (self.episode-1) + self.profit)/self.episode
         self.mean_square = (self.mean_square * (self.episode-1) + self.profit ** 2)/self.episode
 
-
         info = self._get_info()
         state = self._get_state()
         return state, reward, done, info
@@ -188,9 +202,9 @@ class MarketEnv(gym.Env):
         return self._get_state()
 
     def _get_state(self):
-        noise = np.random.normal(0,self.noise,self.observation_space.shape)
+        noise = np.random.normal(0, self.noise, self.observation_space.shape)
         state = self.features.iloc[self.current_index].to_numpy()*self.state_scale
-        state = state + noise       
+        state = state + noise
         np.clip(state, -1, 1, out=state)
         if (state.shape != self.observation_space.shape):
             raise Exception('Shape of state {state.shape} is incorrect should be {self.observation_space.shape}')
@@ -219,7 +233,7 @@ class MarketEnv(gym.Env):
             'mean_square': self.mean_square,
             'mdd': self.max_drawdown,
             'profit': self.profit,
-            'reward':self.reward,
+            'reward': self.reward,
             'dd': self.drawdown,
             'episode': self.episode,
         }

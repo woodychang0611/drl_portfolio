@@ -10,13 +10,13 @@ import os
 import common
 import matplotlib.pyplot as plt
 from common.trainer import get_trainer
-from common.market_env import simple_return_reward, sharpe_ratio_reward
+from common.market_env import simple_return_reward, sharpe_ratio_reward, risk_adjusted_reward
 from common.matplotlib_extend import plot_ma
 import rlkit.torch.pytorch_util as ptu
 import numpy as np
 from datetime import datetime
 from rlkit.torch.torch_rl_algorithm import TorchBatchRLAlgorithm
-
+import gtimer as gt
 
 def load_dataset():
     current_folder = os.path.dirname(__file__)
@@ -31,23 +31,17 @@ def load_dataset():
 
 gym.envs.register(id='MarketEnv-v0', entry_point='common.market_env:MarketEnv', max_episode_steps=1000)
 
-
-def post_process(env, algorithm, epoch, eval_result, output_csv):
-    done = False
-    policy = model.policy
-    while not done:
-        actions = policy.get_actions(state)
-        state, reward, done, info = env.step(actions)
-        print(reward)
-        print(info)
-
-
 def train_model(variant):
+    gt.reset_root() 
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_dir = f"./output/train_out_{timestamp}/"
+
+    setup_logger('name-of-experiment', variant=variant,
+             snapshot_mode='gap_and_last', snapshot_gap=20, log_dir=log_dir)
 
     expl_env_kwargs = variant['expl_env_kwargs']
     eval_env_kwargs = variant['eval_env_kwargs']
     trainer_kwargs = variant['trainer_kwargs']
-    log_dir = variant['log_dir']
 
     df_ret_train, df_ret_val, df_feature = load_dataset()
     df_ret_train.to_csv(os.path.join(log_dir, 'df_ret_train.csv'))
@@ -74,7 +68,7 @@ def train_model(variant):
     trainer = get_trainer(env=eval_env, **trainer_kwargs)
     policy = trainer.policy
     eval_policy = MakeDeterministic(policy)
-    eval_policy = policy
+    #eval_policy = policy
     eval_path_collector = MdpPathCollector(
         eval_env,
         eval_policy,
@@ -102,13 +96,10 @@ def train_model(variant):
 
 
 ptu.set_gpu_mode(True)
-timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-log_dir = f"./output/train_out_{timestamp}/"
 
 fast_forward_scale = 1
 variant = dict(
     version="normal",
-    log_dir=log_dir,
     replay_buffer_size=int(1E6),
     trainer_kwargs=dict(
         algorithm="SAC", #Can be SAC, TD3, or DDPG
@@ -118,19 +109,19 @@ variant = dict(
     expl_env_kwargs=dict(
         noise=0.3,
         state_scale=0.3,
-        reward_func=simple_return_reward,
+        reward_func=risk_adjusted_reward(threshold=0.07,drop_only=False),
         trade_freq='weeks',
         trade_pecentage=0.2
     ),
     eval_env_kwargs=dict(
         noise=0,
         state_scale=0.3,
-        reward_func=simple_return_reward,
+        reward_func=risk_adjusted_reward(threshold=0.07,drop_only=False),
         trade_freq='weeks',
         trade_pecentage=1
     ),
     algorithm_kwargs=dict(
-        num_epochs=2500,
+        num_epochs=500,
         num_eval_steps_per_epoch=int(1000/fast_forward_scale),
         num_trains_per_train_loop=int(3000/fast_forward_scale),
         num_expl_steps_per_train_loop=int(1000/fast_forward_scale),
@@ -140,7 +131,7 @@ variant = dict(
     )
 )
 
-setup_logger('name-of-experiment', variant=variant,
-             snapshot_mode='gap_and_last', snapshot_gap=20, log_dir=log_dir)
+for reward_scale in (1000,):
+    variant['trainer_kwargs']['reward_scale'] = reward_scale
+    train_model(variant)
 
-train_model(variant)
