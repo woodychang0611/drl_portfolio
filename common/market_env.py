@@ -42,7 +42,7 @@ def risk_adjusted_reward(env, threshold: float=float("inf"), drop_only: bool = F
         return reward
     if (reward >= 0 and drop_only):
         return reward
-    reward = reward - 2 * (abs(reward) - threshold)
+    reward = reward - (abs(reward) - threshold)
 
     return reward
 

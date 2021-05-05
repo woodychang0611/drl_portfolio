@@ -112,7 +112,7 @@ variant = dict(
         state_scale=0.3,
         reward_func=risk_adjusted_reward,
         reward_func_kwargs=dict(
-            threshold=0.07,
+            threshold=0.03,
             drop_only=False
         )
         ,
@@ -124,7 +124,7 @@ variant = dict(
         state_scale=0.3,
         reward_func=risk_adjusted_reward,
         reward_func_kwargs=dict(
-            threshold=0.07,
+            threshold=0.03,
             drop_only=False
         ),
         trade_freq='weeks',
@@ -141,7 +141,7 @@ variant = dict(
     )
 )
 
-for reward_scale in (1000,):
-    variant['trainer_kwargs']['reward_scale'] = reward_scale
+for threshold in (0.002,0.007):
+    variant['eval_env_kwargs']['reward_func_kwargs']['threshold'] = threshold
     train_model(variant)
 
