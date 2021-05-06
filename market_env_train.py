@@ -143,6 +143,6 @@ variant = dict(
 
 for threshold in (0.002,0.007):
     variant['eval_env_kwargs']['reward_func_kwargs']['threshold'] = threshold
-    variant['eval_env_kwargs']['reward_func_kwargs']['threshold'] = threshold
+    variant['expl_env_kwargs']['reward_func_kwargs']['threshold'] = threshold
     train_model(variant)
 
