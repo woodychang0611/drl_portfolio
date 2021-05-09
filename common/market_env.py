@@ -199,6 +199,9 @@ class MarketEnv(gym.Env):
         self.mean = 0
         self.mean_square = 0
         self.episode = 0
+        self.profit=0
+        self.reward=0
+        self.drawdown = 0
         return self._get_state()
 
     def _get_state(self):
@@ -214,8 +217,11 @@ class MarketEnv(gym.Env):
         start_date = self.returns.index[self.start_index]
         current_date = self.returns.index[self.current_index]
         trade_days = (current_date-start_date).days
-        cagr = math.pow(self.wealth, 365/trade_days) - 1
-        if (self.episode == 1):
+        if(trade_days ==0):
+            cagr =0
+        else:
+            cagr = math.pow(self.wealth, 365/trade_days) - 1
+        if (self.episode <= 1):
             std = 0
         else:
             k = ((self.episode)/(self.episode-1))**0.5
@@ -236,5 +242,6 @@ class MarketEnv(gym.Env):
             'reward': self.reward,
             'dd': self.drawdown,
             'episode': self.episode,
+            'date':current_date,
         }
         return info

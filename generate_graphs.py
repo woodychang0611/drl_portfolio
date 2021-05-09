@@ -83,12 +83,51 @@ def generate_penalty_negtive_profits_compare_graph(subfix=''):
     plt.savefig(get_graph_path(f'penalty_negtive_profits_compare{subfix}.png'))
     plt.clf()
 
+def generate_compare_crp(subfix=''):
+    data = (
+        (r'$\theta$ =$\infty$',r'./data/analysis/threshold/inf_replay_20210509_222427'),
+        (r'$\theta$ = 0.006',r'./data/analysis/threshold/0.006_replay_20210509_222430'),
+        (r'$\theta$ = 0.002',r'./data/analysis/threshold/0.002_replay_20210509_222432'),        
+    )
+    
+    row_count = len(data)
+    fig, axes = plt.subplots(row_count, 2, figsize=(12, 4*row_count), sharey='row')
+    row =0
+    for description, src in data: 
+        for id in (1,2):  
+            ax = axes[row][id-1]
+            exp_df = pd.read_csv(os.path.join(src,f'infos_{id}.csv'), parse_dates=['date'], index_col=['date'])
+            crp_df = pd.read_csv(os.path.join(src,f'infos_{id}_crp.csv'), parse_dates=['date'], index_col=['date'])
+            exp_data = exp_df['wealths']
+            crp_data = crp_df['wealths']
+            exp_cagr = exp_df['cagr'][-1]
+            exp_mdd = exp_df['mdd'][-1]
+            crp_cagr = crp_df['cagr'][-1]
+            crp_mdd = crp_df['mdd'][-1]            
+
+            ax.plot(exp_data.index,exp_data.to_numpy(),label='Experiment')
+            ax.plot(crp_data.index,crp_data.to_numpy(),label='CRP')
+            ax.set_title(f'Period {id}, {description}')
+            ax.set_xlabel('Date')
+            ax.set_ylabel('Wealths')
+            performance_text = f"""
+                CAGR: {exp_cagr:.1%} (Exp.) {crp_cagr:.1%}  (CRP)\n             
+                MDD: {exp_mdd:.1%} (Exp.) {crp_mdd:.1%} (CRP) """
+            #update for latex
+            performance_text=performance_text.replace("%","\%")
+            ax.text(0.05, 0.95,performance_text, transform=ax.transAxes, verticalalignment='top')
+            plt.setp(ax.get_xticklabels(), rotation=30, horizontalalignment='right')         
+        row+=1
+    plt.legend(loc='lower right')
+    plt.tight_layout()
+    plt.savefig(get_graph_path(f'crp_compare{subfix}.png'))
+    plt.clf()
 
 if __name__ == '__main__':
-
-    set_matplotlib_style(mode='slide')
+    #set_matplotlib_style(mode='slide')
     # generate_noise_compare_graph('_slide')
-    generate_penalty_negtive_profits_compare_graph('_slide')
+    #generate_penalty_negtive_profits_compare_graph('_slide')
     set_matplotlib_style()
+    generate_compare_crp()
     # generate_noise_compare_graph()
-    generate_penalty_negtive_profits_compare_graph()
+    # generate_penalty_negtive_profits_compare_graph()

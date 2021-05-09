@@ -32,7 +32,7 @@ def load_dataset():
 gym.envs.register(id='MarketEnv-v0', entry_point='common.market_env:MarketEnv', max_episode_steps=1000)
 
 def train_model(variant):
-    gt.reset_root() 
+    gt.reset_root()
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     log_dir = f"./output/train_out_{timestamp}/"
 
