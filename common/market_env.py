@@ -242,6 +242,6 @@ class MarketEnv(gym.Env):
             'reward': self.reward,
             'dd': self.drawdown,
             'episode': self.episode,
-            'date':current_date,
+            'date':current_date.value,
         }
         return info
