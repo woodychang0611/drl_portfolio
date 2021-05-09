@@ -32,6 +32,7 @@ def eval_policy(env, policy):
     actions=[]
     while not done:
         action = policy.get_actions(state)
+        info['date'] = Timestamp(info['date'] )
         infos.append(info)        
         state, reward, done, info = env.step(action)
         actions.append(action)
