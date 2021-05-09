@@ -5,7 +5,7 @@ def set_matplotlib_style(mode=None):
     matplotlib.rcParams.update(matplotlib.rcParamsDefault)
     matplotlib.rcParams.update({'font.size': 15})
     matplotlib.rcParams['lines.linewidth'] = 2
-
+    matplotlib.rcParams["text.usetex"] = True
 
     if(mode=='slide'):
         matplotlib.rcParams['axes.prop_cycle']=  cycler(color= ['#66FF99','#FFCC99','#FFFF99','#FF99FF'])
