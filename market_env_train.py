@@ -131,7 +131,7 @@ variant = dict(
         trade_pecentage=1
     ),
     algorithm_kwargs=dict(
-        num_epochs=500,
+        num_epochs=1000,
         num_eval_steps_per_epoch=int(1000/fast_forward_scale),
         num_trains_per_train_loop=int(3000/fast_forward_scale),
         num_expl_steps_per_train_loop=int(1000/fast_forward_scale),
