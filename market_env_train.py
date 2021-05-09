@@ -131,7 +131,7 @@ variant = dict(
         trade_pecentage=1
     ),
     algorithm_kwargs=dict(
-        num_epochs=1000,
+        num_epochs=2500,
         num_eval_steps_per_epoch=int(1000/fast_forward_scale),
         num_trains_per_train_loop=int(3000/fast_forward_scale),
         num_expl_steps_per_train_loop=int(1000/fast_forward_scale),
@@ -142,7 +142,7 @@ variant = dict(
 )
 
 if __name__ == '__main__':
-    for threshold in (0.002,0.006,0.002,0.002,0.006,):
+    for threshold in (0.002,0.006,99999,):
         variant['eval_env_kwargs']['reward_func_kwargs']['threshold'] = threshold
         variant['expl_env_kwargs']['reward_func_kwargs']['threshold'] = threshold
         train_model(variant)
