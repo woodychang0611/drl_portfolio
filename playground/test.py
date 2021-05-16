@@ -14,12 +14,5 @@ from pandas import Timestamp
 from common.finance_utility import finance_utility
 import matplotlib.pyplot as plt
 
-def get_func(a):
-    def F(s):
-        print(f'{a}:{s}')
-    return F
-
-
-f = get_func('test')
-kwargs = dict(s='1234')
-f(**kwargs)
+validate_split_date = Timestamp('2019-03-01')
+print(validate_split_date.value)

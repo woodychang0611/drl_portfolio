@@ -87,7 +87,7 @@ def generate_compare_crp(subfix=''):
     data = (
         (r'$\theta$ =$\infty$',r'./data/analysis/threshold/inf_replay_20210509_222427'),
         (r'$\theta$ = 0.006',r'./data/analysis/threshold/0.006_replay_20210509_222430'),
-        (r'$\theta$ = 0.002',r'./data/analysis/threshold/0.002_replay_20210509_222432'),        
+        (r'$\theta$ = 0.002',r'./data/analysis/threshold/0.002_replay_20210516_171556'),        
     )
     
     row_count = len(data)

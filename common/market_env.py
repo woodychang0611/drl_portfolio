@@ -36,13 +36,15 @@ def sharpe_ratio_reward(env):
     return reward
 
 
-def risk_adjusted_reward(env, threshold: float=float("inf"), drop_only: bool = False):
+def risk_adjusted_reward(env, threshold: float=float("inf"), 
+                        alpha = 1,
+                        drop_only: bool = False):
     reward = env.profit
     if (abs(reward) < threshold):
         return reward
     if (reward >= 0 and drop_only):
         return reward
-    reward = reward - (abs(reward) - threshold)
+    reward = reward - alpha*(abs(reward) - threshold)
 
     return reward
 

@@ -55,7 +55,7 @@ ptu.set_gpu_mode(True)
 #src = r'C:\Users\Woody\Documents\git repository\nccu-thesis\code\output\train_out_20210502_230851'
 srcs=(r"./trained/train_out_20210502_234701",
     r"./data/analysis/drop/0.006_train_out_20210507_205804",
-    r"./data/analysis/drop/0.002_train_out_20210508_183303"
+    r"./data/analysis/drop/0.002_train_out_20210511_073123"
     )
 
 gym.envs.register(id='MarketEnv-v0', entry_point='common.market_env:MarketEnv', max_episode_steps=1000)
