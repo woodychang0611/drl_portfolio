@@ -51,7 +51,7 @@ def generate_penalty_negtive_profits_compare_graph(subfix=''):
         (r"$\theta$ = 0.002, penalty upon negtive profits only",
          "./data/analysis/drop/drop_only/0.002_drop_only_train_out_20210508_132328"),
         (r"$\theta$ = 0.002, penalty upon all profits",
-         "./data/analysis/drop/0.002_train_out_20210508_183303"),
+         "./data/analysis/drop/0.002_train_out_20210511_073123"),
         (r"$\theta$ = 0.006, penalty upon negtive profits only",
          "./data/analysis/drop/drop_only/0.006_drop_only_train_out_20210507_182555"),
         (r"$\theta$ = 0.006, penalty upon all profits",
@@ -124,10 +124,10 @@ def generate_compare_crp(subfix=''):
     plt.clf()
 
 if __name__ == '__main__':
-    #set_matplotlib_style(mode='slide')
-    # generate_noise_compare_graph('_slide')
-    #generate_penalty_negtive_profits_compare_graph('_slide')
+    set_matplotlib_style(mode='slide')
+    generate_noise_compare_graph('_slide')
+    generate_penalty_negtive_profits_compare_graph('_slide')
     set_matplotlib_style()
     generate_compare_crp()
-    # generate_noise_compare_graph()
-    # generate_penalty_negtive_profits_compare_graph()
+    generate_noise_compare_graph()
+    generate_penalty_negtive_profits_compare_graph()

@@ -6,7 +6,7 @@ def set_matplotlib_style(mode=None):
     matplotlib.rcParams.update({'font.size': 15})
     matplotlib.rcParams['lines.linewidth'] = 2
     matplotlib.rcParams["text.usetex"] = True
-
+    matplotlib.rcParams['axes.prop_cycle']=  cycler(color= ['#6600CC','#33CC33'])
     if(mode=='slide'):
         matplotlib.rcParams['axes.prop_cycle']=  cycler(color= ['#66FF99','#FFCC99','#FFFF99','#FF99FF'])
         for name in matplotlib.rcParams:
@@ -17,6 +17,7 @@ def set_matplotlib_style(mode=None):
 
 def plot_ma(series,lables,title,n):
     fig, ax = matplotlib.pyplot.subplots()
+    
     for s,label in zip(series,lables):
         x=range(len(s))
         y_std = s.rolling(n).std()   
