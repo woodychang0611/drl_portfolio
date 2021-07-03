@@ -116,6 +116,8 @@ for src in srcs:
         crp_policy  = fix_action_policy(actions)
         actions, weights,infos = eval_policy(env,crp_policy)
         infos.to_csv(os.path.join(log_dir,f'infos_{id}_crp.csv'))
+        (get_unwrapped_env (env)).returns.to_csv(os.path.join(log_dir,f'returns_{id}.csv'))
+
         id+=1
 exit()
 
