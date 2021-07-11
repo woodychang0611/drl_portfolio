@@ -58,7 +58,7 @@ def generate_penalty_negtive_profits_compare_graph(subfix=''):
          "./data/analysis/drop/0.006_train_out_20210507_205804"),
     )
 
-    fig, axes = plt.subplots(2, 2, figsize=(12, 12), sharey='row')
+    fig, axes = plt.subplots(2, 2, figsize=(12, 8), sharey='row')
     index = 0
     for description, src in data:
         ax = axes[int(index/2)][int(index % 2)]
@@ -82,6 +82,7 @@ def generate_penalty_negtive_profits_compare_graph(subfix=''):
     plt.tight_layout()
     plt.savefig(get_graph_path(f'penalty_negtive_profits_compare{subfix}.png'))
     plt.clf()
+
 
 def generate_compare_crp(subfix=''):
     data = (
@@ -123,7 +124,40 @@ def generate_compare_crp(subfix=''):
     plt.savefig(get_graph_path(f'crp_compare{subfix}.png'))
     plt.clf()
 
+
+def generate_reward_graph():
+    fig, axes = plt.subplots(1,3, figsize=(12, 4), sharey='row')
+    x = range(-100,100)
+    theta =65 
+    y = np.array(list(map(lambda a:a,x)))
+    p = np.array(list(map(lambda a:0,x)))
+    axes[0].plot(x,y-p,label='reward')
+    axes[0].plot(x,p,label='penalty') 
+    axes[0].set_title('No penalty')    
+    p = np.array(list(map(lambda a:0 if (a >= -theta) else abs(a)-theta,x)))
+    axes[1].plot(x,y-p,label='reward')
+    axes[1].plot(x,p,label='penalty')
+    axes[1].set_title('Penalty upon negtive profits only')    
+    p = np.array(list(map(lambda a:0 if (abs(a) <= theta) else abs(a)-theta,x)))
+    axes[2].plot(x,y-p,label='reward')
+    axes[2].plot(x,p,label='penalty')
+    axes[2].set_title('Penalty upon all profits')        
+    for ax in axes:
+        ax.grid(True, which='both')
+        ax.set_xticks([-theta,0,theta])
+        ax.set_yticks([-theta,0,theta])
+        ax.set_xticklabels([r"-$\theta$","0",r"$\theta$"])   
+        ax.set_yticklabels([r"-$\theta$","0",r"$\theta$"])
+        ax.set_xlabel('Profit')
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(get_graph_path(f'reward.png'))
+    plt.clf()    
+
+
 if __name__ == '__main__':
+    set_matplotlib_style()
+    generate_reward_graph()
     set_matplotlib_style(mode='slide')
     generate_noise_compare_graph('_slide')
     generate_penalty_negtive_profits_compare_graph('_slide')
